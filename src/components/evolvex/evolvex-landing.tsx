@@ -427,76 +427,11 @@ export function EvolvexLanding() {
             Break Production Systems
           </h1>
 
-          {/* Subtitle with Dual RoughNotation Sketch Annotations */}
-          <div className="mx-auto mt-10 max-w-2xl text-base leading-relaxed text-white/65 sm:text-lg flex flex-col items-center gap-12 sm:gap-14">
-            {/* Line 1: EvolveX solves blind war rooms */}
-            <div className="text-center">
-              Diagnose production outages without wasting engineering hours in{' '}
-              <span className="relative inline-block">
-                {mounted ? (
-                  <RoughNotation
-                    type="crossed-off"
-                    show={showCross}
-                    color="#ef4444"
-                    strokeWidth={2}
-                    padding={[2, 4]}
-                  >
-                    <span>blind war rooms</span>
-                  </RoughNotation>
-                ) : (
-                  <span>blind war rooms</span>
-                )}
-                {mounted && showCross && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.5, rotate: -10 }}
-                    animate={{ opacity: 1, scale: 1, rotate: 0 }}
-                    transition={{ delay: 1.8, duration: 0.5, type: 'spring' }}
-                    className="absolute -right-6 -top-11 sm:-right-22 sm:-top-12 flex flex-col items-start pointer-events-none"
-                  >
-                    <div className="relative">
-                      <RoughNotation
-                        type="circle"
-                        show={true}
-                        color="#ef4444"
-                        strokeWidth={2}
-                        padding={10}
-                        animationDelay={2200}
-                      >
-                        <span className="font-handwriting text-2xl tracking-wide text-white">
-                          EvolveX
-                        </span>
-                      </RoughNotation>
-
-                      {/* Curly Arrow */}
-                      <svg
-                        className="absolute -bottom-8 -left-10 size-12 -rotate-[15deg]"
-                        viewBox="0 0 50 50"
-                        fill="none"
-                      >
-                        <motion.path
-                          d="M10 40c5-15 15-25 25-25"
-                          stroke="#ef4444"
-                          strokeWidth={2}
-                          strokeLinecap="round"
-                          initial={{ pathLength: 0 }}
-                          animate={{ pathLength: 1 }}
-                          transition={{ delay: 2.1, duration: 0.6 }}
-                        />
-                        <motion.path
-                          d="M30 10l5 5l-5 5"
-                          stroke="#ef4444"
-                          strokeWidth={2}
-                          strokeLinecap="round"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          transition={{ delay: 2.7 }}
-                        />
-                      </svg>
-                    </div>
-                  </motion.div>
-                )}
-              </span>
-              .
+          {/* Subtitle with Single RoughNotation Sketch Annotation for Thally */}
+          <div className="mx-auto mt-10 max-w-2xl text-base leading-relaxed text-white/65 sm:text-lg flex flex-col items-center gap-7">
+            {/* Line 1: Clear problem statement */}
+            <div className="text-center text-white/70">
+              Diagnose production outages without wasting engineering hours in blind war rooms.
             </div>
 
             {/* Line 2: The official docs of EvolveX -> Thally! in sketchy hand-drawn style */}
@@ -510,7 +445,7 @@ export function EvolvexLanding() {
                     color="#ef4444"
                     strokeWidth={2}
                     padding={[2, 4]}
-                    animationDelay={1000}
+                    animationDelay={600}
                   >
                     <span className="text-white/40">docs</span>
                   </RoughNotation>
@@ -521,7 +456,7 @@ export function EvolvexLanding() {
                   <motion.div
                     initial={{ opacity: 0, scale: 0.5, rotate: 6 }}
                     animate={{ opacity: 1, scale: 1, rotate: 0 }}
-                    transition={{ delay: 2.3, duration: 0.5, type: 'spring' }}
+                    transition={{ delay: 1.4, duration: 0.5, type: 'spring' }}
                     className="absolute -right-6 -top-10 sm:-right-20 sm:-top-10 flex flex-col items-start"
                   >
                     <div className="relative">
@@ -531,13 +466,13 @@ export function EvolvexLanding() {
                         color="#ef4444"
                         strokeWidth={2}
                         padding={8}
-                        animationDelay={2600}
+                        animationDelay={1800}
                       >
                         <a
                           href="https://github.com/thallylabs/thally"
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="font-handwriting text-2xl tracking-wide text-white hover:text-[#ef4444] transition-colors inline-block px-1 cursor-pointer"
+                          className="font-handwriting text-2xl sm:text-3xl tracking-wide text-white hover:text-[#ef4444] transition-colors inline-block px-1 cursor-pointer"
                         >
                           Thally!
                         </a>
@@ -556,7 +491,7 @@ export function EvolvexLanding() {
                           strokeLinecap="round"
                           initial={{ pathLength: 0 }}
                           animate={{ pathLength: 1 }}
-                          transition={{ delay: 2.5, duration: 0.6 }}
+                          transition={{ delay: 1.6, duration: 0.6 }}
                         />
                         <motion.path
                           d="M30 10l5 5l-5 5"
@@ -565,7 +500,7 @@ export function EvolvexLanding() {
                           strokeLinecap="round"
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
-                          transition={{ delay: 3.0 }}
+                          transition={{ delay: 2.1 }}
                         />
                       </svg>
                     </div>
