@@ -19,27 +19,27 @@ export function TelemetryIntelligenceFlow() {
 
   return (
     <ExcalidrawCanvas
-      title="Adaptive Telemetry Sampling Control Plane"
-      subtitle="Click buttons to switch sampling states or click 'Simulate' to watch automated rate escalation"
+      title="Adaptive Telemetry Sampling"
+      subtitle="Click to switch sampling states or simulate automated rate escalation"
       onSimulate={handleSimulate}
       isSimulating={isSimulating}
       stepProgress={
         activeState === 'baseline'
-          ? 'Baseline Mode: 5%'
+          ? 'Baseline: 5%'
           : activeState === 'boost'
-          ? 'Deploy Change Boost: 80%'
+          ? 'Change Boost: 80%'
           : 'Incident Lock: 100%'
       }
     >
-      <div className="space-y-4 max-w-4xl mx-auto">
-        {/* State selector pills */}
-        <div className="flex flex-wrap items-center justify-center gap-2 mb-2">
+      <div className="space-y-3 max-w-4xl mx-auto">
+        {/* State selector */}
+        <div className="flex flex-wrap items-center justify-center gap-2 mb-1">
           <button
             onClick={() => setActiveState('baseline')}
             className={`px-3 py-1.5 rounded-lg text-xs font-mono transition-all border ${
               activeState === 'baseline'
-                ? 'bg-sky-500/20 text-sky-300 border-sky-500/50 shadow-sm scale-105'
-                : 'bg-muted/40 text-muted-foreground border-border/70 hover:text-foreground'
+                ? 'bg-[#6b93b8]/15 text-[#6b93b8] border-[#6b93b8]/40'
+                : 'bg-muted/30 text-muted-foreground/60 border-border/40 hover:text-foreground/70'
             }`}
           >
             1. Baseline (5-10%)
@@ -48,8 +48,8 @@ export function TelemetryIntelligenceFlow() {
             onClick={() => setActiveState('boost')}
             className={`px-3 py-1.5 rounded-lg text-xs font-mono transition-all border ${
               activeState === 'boost'
-                ? 'bg-amber-500/20 text-amber-300 border-amber-500/50 shadow-sm scale-105'
-                : 'bg-muted/40 text-muted-foreground border-border/70 hover:text-foreground'
+                ? 'bg-[#b89b6b]/15 text-[#b89b6b] border-[#b89b6b]/40'
+                : 'bg-muted/30 text-muted-foreground/60 border-border/40 hover:text-foreground/70'
             }`}
           >
             2. Change Boost (50-80%)
@@ -58,19 +58,19 @@ export function TelemetryIntelligenceFlow() {
             onClick={() => setActiveState('lock')}
             className={`px-3 py-1.5 rounded-lg text-xs font-mono transition-all border ${
               activeState === 'lock'
-                ? 'bg-rose-500/20 text-rose-300 border-rose-500/50 shadow-sm scale-105'
-                : 'bg-muted/40 text-muted-foreground border-border/70 hover:text-foreground'
+                ? 'bg-[#c2716b]/15 text-[#c2716b] border-[#c2716b]/40'
+                : 'bg-muted/30 text-muted-foreground/60 border-border/40 hover:text-foreground/70'
             }`}
           >
             3. Incident Lock (100%)
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          {/* Card 1: Collector */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5">
+          {/* Collector */}
           <ExcalidrawCard
             id="collector"
-            title="OTel Collector DaemonSet"
+            title="OTel Collector"
             subtitle="Adaptive tail-sampling processor"
             badge={
               activeState === 'baseline'
@@ -81,73 +81,67 @@ export function TelemetryIntelligenceFlow() {
             }
             badgeColor={
               activeState === 'baseline'
-                ? '#38BDF8'
+                ? '#6b93b8'
                 : activeState === 'boost'
-                ? '#F59E0B'
-                : '#F43F5E'
+                ? '#b89b6b'
+                : '#c2716b'
             }
             accentColor={
               activeState === 'baseline'
-                ? '#38BDF8'
+                ? '#6b93b8'
                 : activeState === 'boost'
-                ? '#F59E0B'
-                : '#F43F5E'
+                ? '#b89b6b'
+                : '#c2716b'
             }
             icon={Cpu}
-            roughType="box"
-            roughColor="#38BDF8"
             details={{
               endpoint: '/telemetry-intelligence/sync',
-              note: 'Dynamically updates sampling ratio without restarting the collector pod.',
+              note: 'Updates sampling ratio without restarting the collector pod.',
             }}
           >
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="text-[11px] text-muted-foreground/60 mt-1">
               {activeState === 'baseline' &&
-                'Normal operation: samples 5% of healthy traces, 100% of 5xx errors to minimize network cost.'}
+                'Normal: samples 5% of healthy traces, 100% of 5xx errors.'}
               {activeState === 'boost' &&
-                'Deploy detected: escalated to 80% sampling for 20m post-deployment to capture early regressions.'}
+                'Deploy detected: 80% sampling for 20m post-deployment.'}
               {activeState === 'lock' &&
-                'Active incident: 100% trace lock enabled. Zero span dropped across all affected microservices.'}
+                'Active incident: 100% trace lock. Zero spans dropped.'}
             </p>
           </ExcalidrawCard>
 
-          {/* Card 2: SigNoz ClickHouse */}
+          {/* ClickHouse */}
           <ExcalidrawCard
             id="signoz-store"
             title="SigNoz ClickHouse"
             subtitle="Telemetry Data Plane"
-            badge="Storage Optimized"
-            badgeColor="#F43F5E"
-            accentColor="#F43F5E"
+            badge="Storage"
+            badgeColor="#c2716b"
+            accentColor="#c2716b"
             icon={Flame}
-            roughType="box"
-            roughColor="#F43F5E"
             details={{
-              note: 'Stores full fidelity traces during incidents; saves 70% storage cost during baseline.',
+              note: 'Full fidelity during incidents; 70% storage savings during baseline.',
             }}
           >
-            <p className="text-xs text-muted-foreground mt-1">
-              ClickHouse stores only high-value traces during calm periods, while capturing 100% causal depth when an investigation opens.
+            <p className="text-[11px] text-muted-foreground/60 mt-1">
+              Stores only high-value traces during calm periods, capturing 100% depth when an investigation opens.
             </p>
           </ExcalidrawCard>
 
-          {/* Card 3: Evolvex Controller */}
+          {/* Evolvex */}
           <ExcalidrawCard
             id="evolvex-ctrl"
             title="Evolvex Intelligence"
             subtitle="Policy Decision Engine"
-            badge="Autonomous Control"
-            badgeColor="#00CC66"
-            accentColor="#00CC66"
+            badge="Autonomous"
+            badgeColor="#6b9e6b"
+            accentColor="#6b9e6b"
             icon={ShieldAlert}
-            roughType="box"
-            roughColor="#00CC66"
             details={{
               note: 'Triggers: GitHub Deploy (Change Boost) & Fired Alerts (Incident Lock).',
             }}
           >
-            <p className="text-xs text-muted-foreground mt-1">
-              Listens to GitHub releases, Helm updates, and alert webhooks. Automatically commands collector sampling rates in realtime.
+            <p className="text-[11px] text-muted-foreground/60 mt-1">
+              Listens to GitHub releases, Helm updates, and alert webhooks. Commands collector sampling rates in realtime.
             </p>
           </ExcalidrawCard>
         </div>
