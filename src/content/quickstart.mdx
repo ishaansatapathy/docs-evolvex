@@ -1,47 +1,182 @@
 ---
 title: Quickstart
-description: Guide a new reader through one useful workflow and show them how to verify it.
+description: Connect SigNoz, configure the multi-tenant alert webhook, and verify autonomous incident investigation in under 5 minutes.
+keywords:
+  - quickstart
+  - signoz setup
+  - 5 minute demo
+  - opentelemetry sdk
+  - incident investigation
+  - root cause analysis
+lastUpdated: "2026-09-10"
+lastVerified: "2026-09-10"
+verifiedVersion: "v1.0.0"
 ---
 
-A strong quickstart produces one meaningful result. Replace the placeholders
-below with the shortest supported path for your product.
+<AgentPrompt heading="Prefer to let an AI agent configure this?" title="Copy the complete prompt for your AI coding agent">
+Configure my application to export OpenTelemetry traces and metrics to SigNoz and connect the alert webhook to Evolvex.
+1. Add `@opentelemetry/sdk-node` and exporter packages to my service runtime.
+2. Configure the OTLP exporter endpoint to your SigNoz instance (`https://ingest.{region}.signoz.cloud:443`) with `SIGNOZ_INGESTION_KEY`.
+3. In SigNoz Notification Channels, create a Webhook channel pointing to `https://evolvex-api.ishaandev.co.in/webhooks/signoz` with HTTP Basic Auth.
+4. Verify the setup by triggering a test alert and checking the Evolvex Investigation Dashboard for an assembled root-cause timeline.
+</AgentPrompt>
 
-## Before you begin
+Evolvex is an **autonomous investigation operating system** built on top of SigNoz. Your application sends OpenTelemetry signals directly to SigNoz, SigNoz fires alert webhooks into Evolvex, and Evolvex synthesizes distributed traces, error logs, eBPF kernel drops, and GitHub deployments into verified root-cause timelines.
 
-List only the requirements needed for this workflow:
+<QuickstartFlow />
 
-- An account or credential, when required
-- A supported runtime, device, browser, or operating system
-- Permission to create or change the resource used in the example
+## The three SigNoz keys
+
+Before starting, understand the three distinct credentials to avoid authentication mismatches:
+
+| Key | Where it belongs | Purpose |
+| :--- | :--- | :--- |
+| **Ingestion key** | Your **application runtime** (`SIGNOZ_INGESTION_KEY`) | Authenticates OTLP traces, logs, and metrics sent **to** SigNoz. |
+| **API key** | **Evolvex Settings → SigNoz** | Grants Evolvex permission to **read** traces, logs, and metrics via Query API v5. Requires **Editor** or **Admin** role. |
+| **Webhook password** | **SigNoz Notification Channel** (Basic Auth) | Authenticates inbound alerts and routes them to your isolated tenant workspace in O(1). |
+
+<Tip>
+  The webhook URL is identical across workspaces (`https://evolvex-api.ishaandev.co.in/webhooks/signoz`). Your unique **Basic Auth password** identifies your organization without cross-tenant leakage.
+</Tip>
+
+## 5-Minute setup workflow
 
 <Steps>
-  <Step title="Install the required tool">
-    Give readers one recommended installation command.
+  <Step title="Stand up your SigNoz backend">
+    Choose either SigNoz Cloud or self-host locally using Foundry:
 
-    ```bash
-    npm install your-package
-    ```
-  </Step>
-  <Step title="Add the minimum configuration">
-    Include only the values needed for the first successful run.
+    <Tabs>
+      <Tab title="SigNoz Cloud (Recommended)">
+        1. Sign in to your [SigNoz Cloud](https://signoz.io/teams/) workspace (e.g. `https://your-org.in2.signoz.cloud`).
+        2. Navigate to **Settings → API Keys** and generate a new key with **Editor** or **Admin** role.
+        3. Navigate to **Settings → Ingestion** and copy your **Ingestion key** and **Ingestion URL**.
+      </Tab>
+      <Tab title="Foundry Local Stack">
+        Run the reproducible Foundry stack from the Evolvex repository root:
 
-    ```bash
-    your-cli init
-    ```
-  </Step>
-  <Step title="Complete the first task">
-    Use a realistic example that produces an observable result.
+        ```bash
+        # Deploy SigNoz with native MCP enabled via casting.yaml
+        pnpm signoz:local:up
+        ```
 
-    ```bash
-    your-cli start
-    ```
+        - SigNoz Web UI: `http://localhost:8080`
+        - OTLP HTTP Endpoint: `http://localhost:4318`
+      </Tab>
+    </Tabs>
   </Step>
-  <Step title="Verify the result">
-    State exactly what the reader should see and how to recover when it does not appear.
+
+  <Step title="Instrument your application with OpenTelemetry">
+    Export telemetry directly to your SigNoz ingestion endpoint:
+
+    <Tabs>
+      <Tab title="Node.js / TypeScript">
+        ```typescript
+        // instrumentation.ts — load before application startup
+        import { NodeSDK } from "@opentelemetry/sdk-node";
+        import { getNodeAutoInstrumentations } from "@opentelemetry/auto-instrumentations-node";
+        import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
+
+        const baseUrl = process.env.SIGNOZ_INGESTION_URL ?? "https://ingest.in2.signoz.cloud";
+        const key = process.env.SIGNOZ_INGESTION_KEY!;
+
+        const sdk = new NodeSDK({
+          serviceName: process.env.OTEL_SERVICE_NAME ?? "payments-svc",
+          traceExporter: new OTLPTraceExporter({
+            url: `${baseUrl}/v1/traces`,
+            headers: { "signoz-ingestion-key": key },
+          }),
+          instrumentations: [getNodeAutoInstrumentations()],
+        });
+
+        sdk.start();
+        ```
+
+        Launch with the pre-load flag:
+        ```bash
+        export SIGNOZ_INGESTION_KEY="your-ingestion-key"
+        export SIGNOZ_INGESTION_URL="https://ingest.in2.signoz.cloud"
+        export OTEL_SERVICE_NAME="payments-svc"
+
+        node --require ./instrumentation.js server.js
+        ```
+      </Tab>
+      <Tab title="Python (FastAPI)">
+        Install the OpenTelemetry distribution:
+        ```bash
+        pip install opentelemetry-distro opentelemetry-exporter-otlp fastapi uvicorn
+        ```
+
+        Run with auto-instrumentation:
+        ```bash
+        export SIGNOZ_INGESTION_KEY="your-ingestion-key"
+        export SIGNOZ_INGESTION_URL="https://ingest.in2.signoz.cloud"
+        export OTEL_SERVICE_NAME="payments-svc"
+        export OTEL_EXPORTER_OTLP_ENDPOINT="${SIGNOZ_INGESTION_URL}"
+        export OTEL_EXPORTER_OTLP_HEADERS="signoz-ingestion-key=${SIGNOZ_INGESTION_KEY}"
+
+        opentelemetry-instrument uvicorn main:app --host 0.0.0.0 --port 8000
+        ```
+      </Tab>
+      <Tab title="Zero-Code Loadgen (No App Needed)">
+        If you want to evaluate Evolvex without wiring an existing application, use the built-in OTLP generator:
+
+        ```bash
+        # Trigger realistic p99 tail latency anomaly batch
+        pnpm signoz:p99
+
+        # Or run continuous background load with periodic spikes
+        pnpm signoz:loadgen
+        ```
+      </Tab>
+    </Tabs>
+  </Step>
+
+  <Step title="Connect your Evolvex workspace vault">
+    1. Sign in to the hosted Evolvex console at `https://evolvex.ishaandev.co.in`.
+    2. Go to **Settings → Connect integrations → SigNoz**.
+    3. Enter your **Cloud URL** and **API Key**, then click **Save SigNoz** → **Test Connection**.
+    4. Click **Generate webhook credentials**. Copy the generated:
+       - **Webhook URL:** `https://evolvex-api.ishaandev.co.in/webhooks/signoz`
+       - **Username:** `evolvex`
+       - **Password:** `<your-unique-workspace-password>`
+  </Step>
+
+  <Step title="Configure the SigNoz alert notification channel">
+    1. In SigNoz, navigate to **Alerts → Notification Channels → + New Channel**.
+    2. Select **Webhook** and configure:
+       - **Channel Name:** `EvolveX-Alerts`
+       - **Webhook URL:** `https://evolvex-api.ishaandev.co.in/webhooks/signoz`
+       - **Username:** `evolvex`
+       - **Password:** Your unique workspace password from Step 3.
+    3. Navigate to **Alerts → Alert Rules** and create an alert for `payments-svc` (e.g., p99 latency > 800ms or error rate > 0). Attach it to `EvolveX-Alerts`.
+  </Step>
+
+  <Step title="Verify the autonomous investigation case">
+    Trigger your application endpoint or run `pnpm signoz:p99`. Within 1-2 minutes:
+    
+    1. Open **Investigations** in Evolvex.
+    2. A new case will transition from `building` to `ready`.
+    3. Open the investigation to view:
+       - **Incident Story:** Chronological narrative synthesized directly from telemetry.
+       - **Evidence Timeline:** Correlated sequence of `ALERT`, `METRIC`, `TRACE`, and `DEPLOY` events.
+       - **Clickable Citations:** Direct jumps (`[T1]`, `[E1]`) to root-cause traces in SigNoz.
+       - **Pinpoint:** Exact culprit line (`src/checkout.ts:42`) derived from error logs and GitHub deploy diffs.
   </Step>
 </Steps>
 
-## Choose the next task
+## Next steps
 
-Link to the guide that naturally follows this result. Avoid ending the reader’s
-journey with a generic list of every feature.
+<CardGroup cols={2}>
+  <Card title="System Architecture" href="/guides/architecture" icon="layers">
+    Explore the zero-fake-data policy, multi-tenant vault, and 6-stage investigation pipeline.
+  </Card>
+  <Card title="eBPF & Kernel Signals (OBI)" href="/guides/ebpf-obi" icon="cpu">
+    Capture kernel-level TCP socket drops and retransmits without changing application code.
+  </Card>
+  <Card title="SigNoz MCP Server" href="/guides/signoz-mcp" icon="bot">
+    Connect Claude and Cursor to query ClickHouse traces and metrics conversationally.
+  </Card>
+  <Card title="Operations Troubleshooting" href="/guides/troubleshooting" icon="shield-alert">
+    Resolve webhook routing, OTel dropped spans, and eBPF privilege issues.
+  </Card>
+</CardGroup>
