@@ -1,43 +1,97 @@
 openapi: 3.1.0
 info:
-  title: Sample Posts API
+  title: Evolvex API
   version: 1.0.0
   description: >-
-    A working sample backed by the public JSONPlaceholder service, so every
-    request in this reference returns a live response you can inspect. Replace
-    this file with the OpenAPI specification for the API your readers use.
+    Autonomous Incident Investigation Operating System on SigNoz. Evolvex correlates
+    alerts, distributed traces, structured logs, eBPF kernel events, Kubernetes cluster
+    changes, and CI/CD git deployments into verified root-cause timelines.
 servers:
-  - url: https://jsonplaceholder.typicode.com
-    description: Live demo server
+  - url: https://evolvex-api.ishaandev.co.in
+    description: Production API Server
+  - url: http://localhost:8000
+    description: Local Development API Server
 tags:
-  - name: Posts
-    description: Create and read example posts.
-  - name: Users
-    description: Look up the example authors behind each post.
+  - name: Webhooks
+    description: Inbound alert and telemetry event webhooks (SigNoz, GitHub, Kubernetes, eBPF, CI/CD, Flags, Plugins).
+  - name: Investigations
+    description: Query and manage autonomous investigation cases, causal timelines, and incident narratives.
+  - name: SDK & Custom Events
+    description: Official typed SDK REST API (/api/v1/sdk/*) for querying investigations, injecting timeline events, and pushing custom telemetry.
+  - name: Telemetry & Health
+    description: Deep dependency-aware health checks and SigNoz integration status.
+  - name: Model Context Protocol
+    description: Remote MCP query endpoints powering AI coding agents (Claude, Cursor) via SigNoz telemetry tools.
 paths:
-  /posts:
+  /webhooks/signoz:
     get:
-      operationId: listPosts
-      tags: [Posts]
-      summary: List posts
-      description: Return every post. Real APIs would paginate a list this size.
+      operationId: getSignozWebhookStatus
+      tags: [Webhooks]
+      summary: SigNoz webhook endpoint status
+      description: Returns configuration health and multi-tenant webhook credentials guidance.
       responses:
         '200':
-          description: All posts.
+          description: Webhook endpoint is active and listening.
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Post'
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Evolvex SigNoz webhook endpoint
+                  signozApiConfigured:
+                    type: boolean
+                    example: true
+                  webhookAuthConfigured:
+                    type: boolean
+                    example: true
+                  multiTenant:
+                    type: string
+                    example: Each workspace generates its own Basic-auth password in Settings.
     post:
-      operationId: createPost
-      tags: [Posts]
-      summary: Create a post
+      operationId: ingestSignozAlert
+      tags: [Webhooks]
+      summary: Ingest SigNoz alert webhook
       description: >-
-        Create a post and receive it back with a generated id. The demo server
-        accepts the write and echoes the result without storing it, so you can
-        try requests freely.
+        Receives fired alerts from a SigNoz Notification Channel. Resolves the tenant workspace
+        in O(1) via the Basic-auth password hash, creates an investigation case, and launches the
+        async evidence enrichment pipeline.
+      security:
+        - webhookBasicAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SigNozAlertPayload'
+      responses:
+        '200':
+          description: Alert ingested and investigation created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SigNozWebhookResult'
+        '400':
+          description: Invalid webhook payload format.
+        '401':
+          description: Unauthorized webhook password.
+        '429':
+          description: Webhook rate limit exceeded.
+
+  /webhooks/github:
+    post:
+      operationId: ingestGithubPush
+      tags: [Webhooks]
+      summary: Ingest GitHub push webhook
+      description: >-
+        Receives GitHub push events, verifies the HMAC-SHA256 signature, and correlates commit SHAs
+        and deploy diffs with open investigations within the incident time window.
+      security:
+        - githubHmac: []
       requestBody:
         required: true
         content:
@@ -45,102 +99,1196 @@ paths:
             schema:
               type: object
               properties:
-                title:
+                ref:
                   type: string
-                  example: Hello from the API playground
-                body:
+                  example: refs/heads/main
+                before:
                   type: string
-                  example: This request runs against a live server.
-                userId:
-                  type: integer
-                  example: 1
-              required: [title, body, userId]
+                  example: 6113728f27ae82c7b1a12fcedf94592988093951
+                after:
+                  type: string
+                  example: 0d1a26e67d8f5eaf1f6ba5c57fc3c7d91ac0fd1c
+                repository:
+                  type: object
+                  properties:
+                    full_name:
+                      type: string
+                      example: ishaansatapathy/payments-svc
+                commits:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        example: 0d1a26e67d8f5eaf1f6ba5c57fc3c7d91ac0fd1c
+                      message:
+                        type: string
+                        example: "fix: update redis pool connection timeout"
+                      author:
+                        type: object
+                        properties:
+                          name:
+                            type: string
+                            example: Ishaan Satapathy
+              required: [ref, after, repository]
       responses:
-        '201':
-          description: The created post, including its generated id.
+        '200':
+          description: GitHub push correlated successfully.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Post'
-  /posts/{id}:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    example: true
+                  correlatedCases:
+                    type: integer
+                    example: 1
+
+  /webhooks/kubernetes:
+    post:
+      operationId: ingestKubernetesEvent
+      tags: [Webhooks]
+      summary: Ingest Kubernetes cluster events
+      description: >-
+        Receives pod lifecycle events (OOMKilled, CrashLoopBackOff, Rollout, Eviction) from the
+        evolvex-agent Helm collector and attaches them as infrastructure change evidence.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                involvedObject:
+                  type: object
+                  properties:
+                    kind:
+                      type: string
+                      example: Pod
+                    name:
+                      type: string
+                      example: payments-svc-76f8b9cb45-9xk2m
+                    namespace:
+                      type: string
+                      example: production
+                reason:
+                  type: string
+                  example: OOMKilled
+                message:
+                  type: string
+                  example: Container payments-worker exceeded memory limit (512Mi)
+                type:
+                  type: string
+                  example: Warning
+              required: [involvedObject, reason]
+      responses:
+        '200':
+          description: Kubernetes event attached to active incident timeline.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    example: true
+
+  /webhooks/ebpf:
+    post:
+      operationId: ingestEbpfSignal
+      tags: [Webhooks]
+      summary: Ingest eBPF kernel network anomaly
+      description: >-
+        Receives kernel-level TCP latency signals, socket resets, and packet drops emitted by the
+        OBI anomaly bridge or Cilium Hubble probes.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                service:
+                  type: string
+                  example: payments-svc
+                metric:
+                  type: string
+                  example: obi_stat_tcp_rtt_seconds
+                value:
+                  type: number
+                  example: 0.842
+                threshold:
+                  type: number
+                  example: 0.250
+                detail:
+                  type: string
+                  example: Kernel TCP RTT spike detected (842ms > 250ms baseline)
+              required: [service, metric, value]
+      responses:
+        '200':
+          description: eBPF signal ingested.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    example: true
+
+  /webhooks/cicd:
+    post:
+      operationId: ingestCicdWorkflowEvent
+      tags: [Webhooks]
+      summary: Ingest CI/CD workflow job event
+      description: >-
+        Receives GitHub Actions and GitLab CI job completions, test failures, and retry chains.
+        Correlates pipeline execution outcomes against open investigations on the targeted service.
+      security:
+        - cicdSecretAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CicdWebhookRequest'
+      responses:
+        '200':
+          description: CI/CD event ingested and correlated.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    example: true
+
+  /webhooks/feature-flags:
+    post:
+      operationId: ingestFeatureFlagEvent
+      tags: [Webhooks]
+      summary: Ingest feature flag change event
+      description: >-
+        Receives LaunchDarkly and Unleash toggle and rollout updates. Correlates flag activation
+        timestamps against metric degradation on targeted services.
+      security:
+        - flagSecretAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FeatureFlagWebhookRequest'
+      responses:
+        '200':
+          description: Feature flag event ingested and correlated.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    example: true
+
+  /webhooks/plugins/{pluginId}:
+    post:
+      operationId: ingestPluginWebhookEvent
+      tags: [Webhooks]
+      summary: Ingest external plugin event
+      description: >-
+        Ingests events from installed Evolvex plugins including Prometheus Alertmanager, Datadog Import,
+        Security Scanner, and generic Custom Events.
+      security:
+        - pluginSecretAuth: []
+      parameters:
+        - name: pluginId
+          in: path
+          required: true
+          description: Identifier of the installed plugin.
+          schema:
+            type: string
+            enum: [prometheus-alertmanager, datadog-import, security-scanner, custom-events]
+            example: prometheus-alertmanager
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PluginWebhookRequest'
+      responses:
+        '200':
+          description: Plugin event processed.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    example: true
+
+  /api/investigations:
     get:
-      operationId: getPost
-      tags: [Posts]
-      summary: Get a post
-      description: Return one post by id. Ids 1–100 exist on the demo server.
+      operationId: listInvestigations
+      tags: [Investigations]
+      summary: List investigations
+      description: >-
+        Returns all active and resolved incident investigations scoped to the caller's organization,
+        supporting filters for severity, pipeline status, case status, and service name.
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of records to return (1-100).
+          schema:
+            type: integer
+            default: 50
+        - name: service
+          in: query
+          description: Filter by service name.
+          schema:
+            type: string
+            example: payments-svc
+        - name: severity
+          in: query
+          description: Filter by severity level.
+          schema:
+            type: string
+            enum: [critical, high, warning, info]
+        - name: pipelineStatus
+          in: query
+          description: Filter by async enrichment status.
+          schema:
+            type: string
+            enum: [building, ready, failed]
+        - name: caseStatus
+          in: query
+          description: Filter by resolution workflow status.
+          schema:
+            type: string
+            enum: [open, investigating, monitoring, resolved]
+      responses:
+        '200':
+          description: List of investigation summaries.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/InvestigationListItem'
+
+  /api/investigations/{id}:
+    get:
+      operationId: getInvestigationDetail
+      tags: [Investigations]
+      summary: Get investigation details
+      description: Returns the complete incident case record, including status, affected services, and AI root cause summary.
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
       parameters:
         - name: id
           in: path
           required: true
-          description: The post id.
+          description: Unique UUID of the investigation.
           schema:
-            type: integer
-            minimum: 1
-            example: 1
+            type: string
+            format: uuid
+            example: c4a78a10-2b36-4d22-9e8a-e9012f205ab1
       responses:
         '200':
-          description: The requested post.
+          description: Investigation details.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Post'
+                $ref: '#/components/schemas/Investigation'
         '404':
-          description: No post has this id.
-  /users/{id}:
+          description: Investigation not found.
+
+  /api/investigations/{id}/timeline:
     get:
-      operationId: getUser
-      tags: [Users]
-      summary: Get a user
-      description: Return the profile of an example author. Ids 1–10 exist.
+      operationId: getInvestigationTimeline
+      tags: [Investigations]
+      summary: Get correlated evidence timeline
+      description: >-
+        Returns the ordered multi-signal timeline synthesizing alerts, traces, logs, eBPF metrics,
+        deployments, and K8s changes into a single causal progression.
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
       parameters:
         - name: id
           in: path
           required: true
-          description: The user id.
+          description: Unique UUID of the investigation.
           schema:
-            type: integer
-            minimum: 1
-            example: 1
+            type: string
+            format: uuid
       responses:
         '200':
-          description: The requested user.
+          description: Chronological list of timeline evidence entries.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/User'
+                type: array
+                items:
+                  $ref: '#/components/schemas/TimelineEntry'
         '404':
-          description: No user has this id.
+          description: Investigation not found.
+
+  /api/investigations/{id}/context:
+    get:
+      operationId: getInvestigationContext
+      tags: [Investigations]
+      summary: Get rule-based investigation context
+      description: Returns the assembled incident context, structured supporting evidence, and narrative citations.
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Unique UUID of the investigation.
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Assembled context.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvestigationContext'
+
+  /api/investigations/{id}/similar:
+    get:
+      operationId: findSimilarInvestigations
+      tags: [Investigations]
+      summary: Find similar past incidents
+      description: Identifies historical incidents sharing correlated services, error signatures, or root causes.
+      security:
+        - sessionAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 5
+      responses:
+        '200':
+          description: List of similar incidents with match confidence score.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SimilarCase'
+
+  /api/investigations/signoz-status:
+    get:
+      operationId: getSignozIntegrationStatus
+      tags: [Telemetry & Health]
+      summary: Get SigNoz integration status
+      description: Inspects active API connectivity to SigNoz Cloud/Foundry, OTLP ingestion keys, and webhook routing.
+      security:
+        - sessionAuth: []
+      responses:
+        '200':
+          description: Status of the SigNoz integration.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  apiConfigured:
+                    type: boolean
+                    example: true
+                  webhookAuthConfigured:
+                    type: boolean
+                    example: true
+                  webhookUrl:
+                    type: string
+                    example: https://evolvex-api.ishaandev.co.in/webhooks/signoz
+                  cloudUrl:
+                    type: string
+                    example: https://ingest.in2.signoz.cloud
+                  productionMode:
+                    type: boolean
+                    example: true
+                  defaultServiceName:
+                    type: string
+                    example: payments-svc
+
+  /health/deep:
+    get:
+      operationId: getDeepHealth
+      tags: [Telemetry & Health]
+      summary: Deep dependency health check
+      description: Evaluates live connectivity across PostgreSQL, SigNoz API, Redis rate limiters, and OpenAI.
+      responses:
+        '200':
+          description: All critical dependencies are operational.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeepHealthResponse'
+        '503':
+          description: One or more critical dependencies failed.
+
+  /api/mcp:
+    post:
+      operationId: executeMcpTool
+      tags: [Model Context Protocol]
+      summary: Execute SigNoz MCP telemetry tool
+      description: >-
+        Exposes ClickHouse-backed Query Builder v5 and SigNoz operations conversationally to
+        AI coding assistants (Claude Code, Cursor).
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/McpToolRequest'
+      responses:
+        '200':
+          description: Tool execution result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/McpToolResponse'
+
+  /api/v1/sdk:
+    get:
+      operationId: getSdkInfo
+      tags: [SDK & Custom Events]
+      summary: SDK API version and endpoints
+      description: Returns SDK API metadata, version string, and available resource endpoints.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: SDK info response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    example: true
+                  version:
+                    type: string
+                    example: 1.0.0
+                  baseUrl:
+                    type: string
+                    example: https://evolvex-api.ishaandev.co.in/api/v1/sdk
+                  endpoints:
+                    type: array
+                    items:
+                      type: string
+
+  /api/v1/sdk/investigations:
+    get:
+      operationId: sdkListInvestigations
+      tags: [SDK & Custom Events]
+      summary: List investigations via SDK
+      description: Returns investigations matching query, severity, and service filters.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum results (1-100).
+          schema:
+            type: integer
+            default: 50
+        - name: service
+          in: query
+          schema:
+            type: string
+        - name: severity
+          in: query
+          schema:
+            type: string
+            enum: [critical, high, warning, info]
+        - name: query
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of investigation items.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    example: true
+                  investigations:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/InvestigationListItem'
+
+  /api/v1/sdk/investigations/{id}:
+    get:
+      operationId: sdkGetInvestigation
+      tags: [SDK & Custom Events]
+      summary: Get investigation by ID via SDK
+      description: Retrieves a single investigation item by its unique ID.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Investigation record.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    example: true
+                  investigation:
+                    $ref: '#/components/schemas/Investigation'
+
+  /api/v1/sdk/investigations/{id}/timeline:
+    get:
+      operationId: sdkGetTimeline
+      tags: [SDK & Custom Events]
+      summary: Get investigation timeline via SDK
+      description: Retrieves all timeline evidence entries for a specified case.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Timeline entries.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    example: true
+                  timeline:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TimelineEntry'
+
+  /api/v1/sdk/investigations/{id}/timeline-events:
+    post:
+      operationId: sdkCreateTimelineEvent
+      tags: [SDK & Custom Events]
+      summary: Inject custom timeline event via SDK
+      description: Appends an operational event (ALERT, DEPLOY, CHANGE, METRIC, LOG, TRACE, EBPF, AI) to the case timeline.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SdkTimelineEventInput'
+      responses:
+        '200':
+          description: Event successfully appended to timeline.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    example: true
+                  timelineEntryId:
+                    type: string
+                    example: tle_01j4k9m
+
+  /api/v1/sdk/investigations/{id}/metadata:
+    post:
+      operationId: sdkAttachMetadata
+      tags: [SDK & Custom Events]
+      summary: Attach metadata to investigation via SDK
+      description: Attaches structured key-value JSON metadata and an optional audit note to the investigation.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SdkMetadataInput'
+      responses:
+        '200':
+          description: Metadata attached.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    example: true
+                  investigationId:
+                    type: string
+                  metadataKeys:
+                    type: array
+                    items:
+                      type: string
+
+  /api/v1/sdk/events:
+    post:
+      operationId: sdkPushCustomEvent
+      tags: [SDK & Custom Events]
+      summary: Push custom telemetry event via SDK
+      description: Ingests a custom operational event and automatically correlates it with any active investigations matching the service.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SdkCustomEventInput'
+      responses:
+        '200':
+          description: Event ingested and attached.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    example: true
+                  attachedInvestigationIds:
+                    type: array
+                    items:
+                      type: string
+                  message:
+                    type: string
+                    example: "Custom event ingested"
+
 components:
+  securitySchemes:
+    webhookBasicAuth:
+      type: http
+      scheme: basic
+      description: HTTP Basic Auth using username 'evolvex' and your per-workspace generated password.
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: Token
+      description: Machine-to-machine API key (EVOLVEX_API_KEY) or collector token.
+    githubHmac:
+      type: apiKey
+      in: header
+      name: X-Hub-Signature-256
+      description: GitHub Webhook HMAC-SHA256 signature header.
+    sessionAuth:
+      type: apiKey
+      in: cookie
+      name: session_token
+      description: Hardened HttpOnly browser session token with CSRF protection header.
+    cicdSecretAuth:
+      type: apiKey
+      in: header
+      name: x-evolvex-cicd-secret
+      description: Scoped per-workspace secret header for CI/CD workflow webhooks.
+    flagSecretAuth:
+      type: apiKey
+      in: header
+      name: x-evolvex-flag-secret
+      description: Scoped per-workspace secret header for feature flag webhooks.
+    pluginSecretAuth:
+      type: apiKey
+      in: header
+      name: x-evolvex-plugin-secret
+      description: Scoped per-workspace secret header for external plugin webhooks.
+
   schemas:
-    Post:
+    SigNozAlertPayload:
+      type: object
+      properties:
+        version:
+          type: string
+          example: '4'
+        groupKey:
+          type: string
+          example: '{}:{service_name="payments-svc"}'
+        status:
+          type: string
+          enum: [firing, resolved]
+          example: firing
+        receiver:
+          type: string
+          example: EvolveX-Alerts
+        alerts:
+          type: array
+          items:
+            type: object
+            properties:
+              status:
+                type: string
+                example: firing
+              labels:
+                type: object
+                properties:
+                  alertname:
+                    type: string
+                    example: p99 latency spike — payments-svc
+                  severity:
+                    type: string
+                    example: critical
+                  service_name:
+                    type: string
+                    example: payments-svc
+              annotations:
+                type: object
+                properties:
+                  description:
+                    type: string
+                    example: Tail latency p99 exceeded 800ms threshold (current 1.24s)
+              startsAt:
+                type: string
+                format: date-time
+                example: '2026-09-10T18:41:00Z'
+      required: [status, alerts]
+
+    SigNozWebhookResult:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        investigationIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+          example: [c4a78a10-2b36-4d22-9e8a-e9012f205ab1]
+        organizationId:
+          type: string
+          format: uuid
+
+    InvestigationListItem:
       type: object
       properties:
         id:
-          type: integer
-          example: 1
-        userId:
-          type: integer
-          example: 1
+          type: string
+          format: uuid
+        shortId:
+          type: string
+          example: INV-1042
         title:
           type: string
-          example: Hello from the API playground
-        body:
+          example: p99 latency spike — payments-svc
+        status:
           type: string
-          example: This request runs against a live server.
-      required: [id, userId, title, body]
-    User:
+          enum: [building, ready, failed]
+          example: ready
+        caseStatus:
+          type: string
+          enum: [open, investigating, monitoring, resolved]
+          example: open
+        severity:
+          type: string
+          example: critical
+        affectedServices:
+          type: array
+          items:
+            type: string
+          example: [payments-svc, redis-cache]
+        createdAt:
+          type: string
+          format: date-time
+
+    Investigation:
       type: object
       properties:
         id:
+          type: string
+          format: uuid
+        shortId:
+          type: string
+          example: INV-1042
+        title:
+          type: string
+          example: Redis connection timeout during checkout
+        status:
+          type: string
+          example: ready
+        caseStatus:
+          type: string
+          example: open
+        severity:
+          type: string
+          example: critical
+        affectedServices:
+          type: array
+          items:
+            type: string
+          example: [payments-svc]
+        aiSummary:
+          type: string
+          example: >-
+            At 18:41 UTC, deploy `fc35fd4` introduced an unhandled pool timeout in
+            `src/checkout.ts:42`. Correlated with an eBPF TCP socket retransmit spike [T1]
+            and subsequent p99 latency jump to 1,240ms [T2].
+        createdAt:
+          type: string
+          format: date-time
+
+    TimelineEntry:
+      type: object
+      properties:
+        id:
+          type: string
+        occurredAt:
+          type: string
+          format: date-time
+          example: '2026-09-10T18:41:12Z'
+        kind:
+          type: string
+          enum: [ALERT, TRACE, LOG, METRIC, DEPLOY, CHANGE, EBPF]
+          example: TRACE
+        title:
+          type: string
+          example: Slow Trace 500 error in POST /checkout
+        detail:
+          type: string
+          example: Trace ID 8fa12b9c duration 1,240ms — Redis timeout
+        source:
+          type: string
+          example: signoz
+        sortOrder:
           type: integer
           example: 1
-        name:
+
+    InvestigationContext:
+      type: object
+      properties:
+        summary:
           type: string
-          example: Leanne Graham
-        username:
+          example: Tail latency spike on payments-svc
+        affectedServices:
+          type: array
+          items:
+            type: string
+        incidentWindow:
+          type: object
+          properties:
+            start:
+              type: string
+              format: date-time
+            end:
+              type: string
+              format: date-time
+        evidenceCompleteness:
+          type: object
+          properties:
+            traces:
+              type: boolean
+              example: true
+            logs:
+              type: boolean
+              example: true
+            github:
+              type: boolean
+              example: true
+            ebpf:
+              type: boolean
+              example: true
+
+    SimilarCase:
+      type: object
+      properties:
+        id:
           type: string
-          example: Bret
-        email:
+          format: uuid
+        shortId:
           type: string
-          example: Sincere@april.biz
-      required: [id, name, username, email]
+          example: INV-0918
+        title:
+          type: string
+          example: Connection pool exhaustion under high concurrency
+        similarityScore:
+          type: number
+          example: 0.94
+        matchReasons:
+          type: array
+          items:
+            type: string
+          example: [Identical service payments-svc, Matching error Redis timeout]
+
+    DeepHealthResponse:
+      type: object
+      properties:
+        healthy:
+          type: boolean
+          example: true
+        environment:
+          type: string
+          example: production
+        generatedAt:
+          type: string
+          format: date-time
+        checks:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+                example: signoz_query_api
+              healthy:
+                type: boolean
+                example: true
+              latencyMs:
+                type: number
+                example: 42
+
+    McpToolRequest:
+      type: object
+      properties:
+        tool:
+          type: string
+          enum:
+            - signoz_list_services
+            - signoz_search_traces
+            - signoz_get_trace_details
+            - signoz_aggregate_traces
+            - signoz_search_logs
+            - signoz_list_alert_rules
+            - signoz_create_dashboard
+          example: signoz_search_traces
+        arguments:
+          type: object
+          properties:
+            service:
+              type: string
+              example: payments-svc
+            timeRange:
+              type: string
+              example: 30m
+            hasError:
+              type: boolean
+              example: true
+      required: [tool, arguments]
+
+    McpToolResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            type: object
+            properties:
+              type:
+                type: string
+                example: text
+              text:
+                type: string
+                example: Found 3 error traces matching service payments-svc
+
+    CicdWebhookRequest:
+      type: object
+      properties:
+        action:
+          type: string
+          example: completed
+        repository:
+          type: object
+          properties:
+            full_name:
+              type: string
+              example: acme/payments-svc
+        workflow_job:
+          type: object
+          properties:
+            name:
+              type: string
+              example: integration-tests
+            workflow_name:
+              type: string
+              example: payments-ci
+            conclusion:
+              type: string
+              example: failure
+            status:
+              type: string
+              example: completed
+            run_attempt:
+              type: integer
+              example: 1
+            html_url:
+              type: string
+              example: "https://github.com/acme/payments-svc/actions/runs/123/job/456"
+            completed_at:
+              type: string
+              format: date-time
+      required: [action]
+
+    FeatureFlagWebhookRequest:
+      type: object
+      properties:
+        kind:
+          type: string
+          example: flag
+        action:
+          type: string
+          example: update
+        title:
+          type: string
+          example: "Turned on flag New Checkout"
+        target:
+          type: object
+          properties:
+            key:
+              type: string
+              example: new-checkout
+            name:
+              type: string
+              example: "New Checkout"
+            tags:
+              type: array
+              items:
+                type: string
+              example: ["service:payments-svc"]
+        member:
+          type: object
+          properties:
+            email:
+              type: string
+              example: alex@example.com
+        date:
+          type: string
+          format: date-time
+      required: [kind, action, title]
+
+    PluginWebhookRequest:
+      type: object
+      description: Payload for installed external plugins (Prometheus Alertmanager, Datadog, Security Scanner, Custom Events).
+      properties:
+        status:
+          type: string
+          example: firing
+        alertname:
+          type: string
+          example: HighErrorRate
+        service:
+          type: string
+          example: payments-svc
+        finding:
+          type: string
+          example: "Public S3 bucket exposure"
+        severity:
+          type: string
+          example: high
+        cve:
+          type: string
+          example: "CVE-2026-1234"
+        metadata:
+          type: object
+
+    SdkTimelineEventInput:
+      type: object
+      properties:
+        title:
+          type: string
+          example: "Database pool resized to 100 connections"
+        detail:
+          type: string
+          example: "Executed automated mitigation script db-pool-boost.sh following p99 spike."
+        kind:
+          type: string
+          enum: [ALERT, DEPLOY, CHANGE, METRIC, LOG, TRACE, EBPF, AI]
+          default: CHANGE
+          example: CHANGE
+        source:
+          type: string
+          example: sre-automation-runner
+        metadata:
+          type: object
+      required: [title, detail]
+
+    SdkMetadataInput:
+      type: object
+      properties:
+        metadata:
+          type: object
+          description: Structured key-value properties to associate with the investigation.
+        appendNote:
+          type: string
+          description: Optional note appended to the timeline audit log.
+          example: "Attached runbook URL and traffic percentage from CI runner."
+      required: [metadata]
+
+    SdkCustomEventInput:
+      type: object
+      properties:
+        title:
+          type: string
+          example: "PostgreSQL read-replica failover initiated"
+        detail:
+          type: string
+          example: "Primary db node degraded; switched active traffic to replica db-replica-02."
+        service:
+          type: string
+          example: payments-svc
+        source:
+          type: string
+          example: cloud-dba-bot
+        occurredAt:
+          type: string
+          format: date-time
+        metadata:
+          type: object
+      required: [title, detail]
+
