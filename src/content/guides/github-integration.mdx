@@ -1,0 +1,92 @@
+---
+title: GitHub Integration & Deploy Correlation
+description: Correlate git commits, pull requests, and push deployments with active incident timelines and enable automated file:line pinpointing.
+keywords:
+  - github integration
+  - deploy correlation
+  - git commits
+  - code pinpoint
+  - stack trace rca
+  - github webhook
+---
+
+GitHub integration enriches open incident investigations by answering the #1 on-call question: **"What changed right before this alert fired?"**
+
+GitHub does **not** create investigations on its own. When an incident is triggered by a SigNoz alert, Evolvex correlates git commits, pull requests, and deploy webhooks that occurred within the incident temporal window and pins them directly onto the evidence timeline.
+
+<DeployCorrelationFlow />
+
+<GitHub repo="ishaansatapathy/EvolveX" title="Evolvex Monorepo" description="Explore the complete open-source codebase, Helm charts, eBPF probe programs, and TypeScript SDK." />
+
+---
+
+## 1. Create a GitHub Personal Access Token (PAT)
+
+Evolvex uses your token to inspect commit diffs and auto-register push webhooks:
+
+1. Open **GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic)**.
+2. Click **Generate new token (classic)**.
+3. Name it `Evolvex-Deploy-Correlation`.
+4. Select the scopes:
+   - `repo` (Full control of private repositories) or `public_repo` (for open source repositories).
+   - `read:user` (to attribute commits to team members).
+5. Generate and copy the token (`ghp_...`).
+
+---
+
+## 2. Connect GitHub in Evolvex Settings
+
+1. Open your Evolvex workspace at `https://evolvex.ishaandev.co.in`.
+2. Navigate to **Settings → Connect integrations → GitHub**.
+3. Fill in:
+   - **Personal Access Token:** Paste your `ghp_...` token.
+   - **Repository:** `owner/your-app-repo` (e.g. `ishaansatapathy/payments-api`—use the repo of your application, not Evolvex).
+4. Click **Save GitHub** → **Test Token**.
+5. Evolvex will automatically test connectivity and attempt to auto-register a push webhook on your repository.
+
+### Manual webhook fallback
+If your GitHub token lacks repository admin rights, configure the webhook manually in your repository:
+- **Payload URL:** `https://evolvex-api.ishaandev.co.in/webhooks/github`
+- **Content type:** `application/json`
+- **Secret:** Your configured `GITHUB_WEBHOOK_SECRET`
+- **Events:** Select **Just the push event**.
+
+---
+
+## 3. Testing deploy correlation
+
+To test deploy correlation, an open investigation case must exist first:
+
+1. Trigger an alert from SigNoz or run `pnpm signoz:p99` so a case opens in **Investigations**.
+2. Push a commit to your application repository:
+   ```bash
+   cd your-payments-api
+   git commit --allow-empty -m "fix(checkout): update redis connection pool timeout"
+   git push origin main
+   ```
+3. Open the active case in Evolvex:
+   - Navigate to **Timeline** and filter by **DEPLOY**.
+   - Your commit SHA, author, and commit message will appear directly on the timeline.
+   - Click **View deploy diff →** to inspect the exact lines changed.
+
+---
+
+## 4. How the pinpoint engine identifies the culprit line
+
+The **Likely Culprit · Pinpoint** card extracts exact `file:line` locations by correlating two real telemetry signals:
+
+```text
+1. SigNoz Error Log (Runtime):
+   Error: Redis connection pool exhausted
+     at CheckoutService.processPayment (/app/src/checkout.ts:42:15)
+
+2. GitHub Commit Diff (Change):
+   Commit fc35fd4 modified /app/src/checkout.ts lines 38-50.
+
+3. Evolvex Pinpoint Result:
+   Likely culprit: src/checkout.ts:42 (Modified 3m before alert by Ishaan)
+```
+
+<Note>
+  Pinpoint requires real error stack traces. Ensure your application logs standard `Error` objects so SigNoz captures the stack trace in structured attributes.
+</Note>
