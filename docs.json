@@ -77,8 +77,12 @@
     },
     "links": [
       {
-        "label": "Console",
-        "href": "http://localhost:3000"
+        "label": "Live Console",
+        "href": "https://evolvex.ishaandev.co.in"
+      },
+      {
+        "label": "GitHub",
+        "href": "https://github.com/ishaansatapathy/EvolveX"
       },
       {
         "label": "SigNoz Cloud",
@@ -230,6 +234,10 @@
         "heading": "Product",
         "items": [
           {
+            "label": "Live Console",
+            "href": "https://evolvex.ishaandev.co.in"
+          },
+          {
             "label": "Overview",
             "href": "/"
           },
@@ -244,6 +252,27 @@
           {
             "label": "Changelog",
             "href": "/changelog"
+          }
+        ]
+      },
+      {
+        "heading": "Open Source",
+        "items": [
+          {
+            "label": "Evolvex Monorepo",
+            "href": "https://github.com/ishaansatapathy/EvolveX"
+          },
+          {
+            "label": "Helm Charts",
+            "href": "https://github.com/ishaansatapathy/EvolveX/tree/main/helm"
+          },
+          {
+            "label": "eBPF & Worker Core",
+            "href": "https://github.com/ishaansatapathy/EvolveX/tree/main/apps/worker"
+          },
+          {
+            "label": "Web Console UI",
+            "href": "https://github.com/ishaansatapathy/EvolveX/tree/main/apps/web"
           }
         ]
       },
