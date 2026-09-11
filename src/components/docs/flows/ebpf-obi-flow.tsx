@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { Cpu, Radio, Flame, ShieldAlert, Activity, Sparkles } from 'lucide-react'
+import { Cpu, Radio, Flame, ShieldAlert, Activity } from 'lucide-react'
 import { ExcalidrawCanvas, ExcalidrawCard, HandDrawnArrow, StickyNote } from './shared-excalidraw'
 
 export function EbpfObiFlow() {
@@ -22,8 +22,8 @@ export function EbpfObiFlow() {
 
   return (
     <ExcalidrawCanvas
-      title="Linux eBPF Kernel Probe & Socket Telemetry Flow"
-      subtitle="Capturing kernel socket drops (kfree_skb) and correlating them with application latency"
+      title="eBPF Kernel Probe & Socket Telemetry"
+      subtitle="Kernel socket drops (kfree_skb) correlated with application latency"
       onSimulate={handleSimulate}
       isSimulating={isSimulating}
       stepProgress={
@@ -36,16 +36,14 @@ export function EbpfObiFlow() {
           : ''
       }
     >
-      {/* Horizontal Flow Pipeline with minimum width to prevent card clipping */}
-      <div className="min-w-[940px] flex items-stretch justify-between gap-2 p-1">
-        {/* Step 1: Linux Kernel */}
-        <div className="flex-1 min-w-[280px] max-w-[320px] flex flex-col">
-          <div className="flex items-center justify-between mb-2 px-1">
-            <span className="font-mono text-xs font-semibold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+      <div className="min-w-[860px] flex items-stretch justify-between gap-2 p-1">
+        {/* Step 1: Kernel */}
+        <div className="flex-1 min-w-[260px] max-w-[300px] flex flex-col">
+          <div className="flex items-center justify-between mb-1.5 px-1">
+            <span className="font-mono text-[10px] text-muted-foreground/50 uppercase tracking-widest">
               Kernel Space
             </span>
-            <StickyNote text="RingBuffer Zero Copy" color="#00CC66" rotation={-1.5} />
+            <StickyNote text="RingBuffer zero-copy" />
           </div>
 
           <ExcalidrawCard
@@ -54,11 +52,9 @@ export function EbpfObiFlow() {
             subtitle="BPF Tracepoints & Kprobes"
             stepNumber="01"
             badge="RingBuffer"
-            badgeColor="#00CC66"
-            accentColor="#00CC66"
+            badgeColor="#6b9e6b"
+            accentColor="#6b9e6b"
             icon={Cpu}
-            roughType="highlight"
-            roughColor="#00CC66"
             seed={101}
             isActive={activeStep === 1}
             isSimulated={activeStep === 1}
@@ -71,41 +67,33 @@ obi_stat_tcp_retransmits_total
 obi_stat_skb_drop_reason`,
             }}
           >
-            <div className="space-y-1.5 mt-2 text-xs font-mono text-muted-foreground">
-              <div className="p-2 rounded bg-muted/50 border border-border/80">
-                • <span className="text-foreground font-semibold">kfree_skb: </span>
-                Socket drop tracer
+            <div className="space-y-1 mt-1.5 text-[11px] font-mono text-muted-foreground/60">
+              <div className="px-2 py-1.5 rounded-md bg-muted/20 border border-border/30">
+                <span className="text-foreground/70 font-medium">kfree_skb:</span> socket drop tracer
               </div>
-              <div className="p-2 rounded bg-muted/50 border border-border/80">
-                • <span className="text-foreground font-semibold">tcp_retransmit: </span>
-                Network congestion
+              <div className="px-2 py-1.5 rounded-md bg-muted/20 border border-border/30">
+                <span className="text-foreground/70 font-medium">tcp_retransmit:</span> network congestion
               </div>
-            </div>
-
-            <div className="mt-2.5 pt-2 border-t border-border/60 font-handwriting text-xs text-emerald-400">
-              ⤹ zero-overhead kernel hook
             </div>
           </ExcalidrawCard>
         </div>
 
-        {/* Arrow 1 -> 2 */}
         <HandDrawnArrow
           direction="right"
           label="OTLP / gRPC"
-          sublabel="DaemonSet Port 4317"
-          color="#38BDF8"
+          sublabel="DaemonSet :4317"
+          color="#6b93b8"
           isActive={activeStep === 1 || activeStep === 2}
-          length={44}
+          length={40}
         />
 
-        {/* Step 2: SigNoz OTel Collector */}
-        <div className="flex-1 min-w-[280px] max-w-[320px] flex flex-col">
-          <div className="flex items-center justify-between mb-2 px-1">
-            <span className="font-mono text-xs font-semibold text-rose-400 uppercase tracking-wider flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-rose-400" />
+        {/* Step 2: Collector */}
+        <div className="flex-1 min-w-[260px] max-w-[300px] flex flex-col">
+          <div className="flex items-center justify-between mb-1.5 px-1">
+            <span className="font-mono text-[10px] text-muted-foreground/50 uppercase tracking-widest">
               User Space OTel
             </span>
-            <StickyNote text="ClickHouse Metrics" color="#F43F5E" rotation={1.5} />
+            <StickyNote text="ClickHouse metrics" />
           </div>
 
           <ExcalidrawCard
@@ -113,12 +101,10 @@ obi_stat_skb_drop_reason`,
             title="SigNoz Collector"
             subtitle="DaemonSet on Port 4317"
             stepNumber="02"
-            badge="ClickHouse Store"
-            badgeColor="#F43F5E"
-            accentColor="#F43F5E"
+            badge="ClickHouse"
+            badgeColor="#c2716b"
+            accentColor="#c2716b"
             icon={Flame}
-            roughType="highlight"
-            roughColor="#F43F5E"
             seed={202}
             isActive={activeStep === 2}
             isSimulated={activeStep === 2}
@@ -128,38 +114,31 @@ obi_stat_skb_drop_reason`,
               note: 'Stores OBI time-series metrics directly in ClickHouse.',
             }}
           >
-            <div className="p-2 rounded bg-muted/50 border border-border/80 text-xs font-mono text-muted-foreground mt-1">
-              <span className="text-foreground font-semibold">Metric Name:</span>
+            <div className="px-2 py-1.5 rounded-md bg-muted/20 border border-border/30 text-[11px] font-mono text-muted-foreground/60 mt-1">
+              <span className="text-foreground/70 font-medium">Metric:</span>{' '}
+              obi_stat_tcp_rtt_seconds
               <br />
-              <span className="text-rose-400">obi_stat_tcp_rtt_seconds</span>
-              <br />
-              <span className="text-foreground font-semibold">Granularity:</span> 10s buckets
-            </div>
-
-            <div className="mt-2.5 pt-2 border-t border-border/60 font-handwriting text-xs text-rose-400">
-              ⤷ OLAP timeseries indexed
+              <span className="text-foreground/70 font-medium">Granularity:</span> 10s buckets
             </div>
           </ExcalidrawCard>
         </div>
 
-        {/* Arrow 2 -> 3 */}
         <HandDrawnArrow
           direction="right"
           label="Query API v5"
-          sublabel="Temporal Correlation"
-          color="#00CC66"
+          sublabel="temporal correlation"
+          color="#6b9e6b"
           isActive={activeStep === 2 || activeStep === 3}
-          length={44}
+          length={40}
         />
 
-        {/* Step 3: Evolvex Engine */}
-        <div className="flex-1 min-w-[280px] max-w-[320px] flex flex-col">
-          <div className="flex items-center justify-between mb-2 px-1">
-            <span className="font-mono text-xs font-semibold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-emerald-400" />
+        {/* Step 3: Evolvex */}
+        <div className="flex-1 min-w-[260px] max-w-[300px] flex flex-col">
+          <div className="flex items-center justify-between mb-1.5 px-1">
+            <span className="font-mono text-[10px] text-muted-foreground/50 uppercase tracking-widest">
               Incident OS
             </span>
-            <StickyNote text="Infrastructure RCA" color="#00CC66" rotation={-1} />
+            <StickyNote text="infrastructure RCA" />
           </div>
 
           <ExcalidrawCard
@@ -168,28 +147,22 @@ obi_stat_skb_drop_reason`,
             subtitle="Kernel vs App Disambiguation"
             stepNumber="03"
             badge="RCA Verified"
-            badgeColor="#00CC66"
-            accentColor="#00CC66"
+            badgeColor="#6b9e6b"
+            accentColor="#6b9e6b"
             icon={ShieldAlert}
-            roughType="highlight"
-            roughColor="#00CC66"
             seed={303}
             isActive={activeStep === 3}
             isSimulated={activeStep === 3}
             details={{
-              note: 'Distinguishes between application code deadlocks and AWS/GCP underlying network packet drops.',
+              note: 'Distinguishes between application deadlocks and underlying network packet drops.',
             }}
           >
-            <div className="p-2 rounded bg-emerald-500/10 border border-emerald-500/30 text-xs font-mono mt-1">
-              <span className="font-bold text-emerald-400">Diagnosis: </span>
-              <span className="text-foreground">Underlying VPC Socket Drop</span>
-              <p className="text-[11px] text-muted-foreground mt-1">
-                Zero app code fault; AWS NAT gateway port exhaustion detected.
+            <div className="px-2 py-1.5 rounded-md bg-muted/20 border border-border/30 text-[11px] font-mono mt-1">
+              <span className="font-medium text-foreground/70">Diagnosis:</span>{' '}
+              <span className="text-foreground/60">VPC Socket Drop</span>
+              <p className="text-[10px] text-muted-foreground/50 mt-0.5">
+                AWS NAT gateway port exhaustion detected. Zero app code fault.
               </p>
-            </div>
-
-            <div className="mt-2.5 pt-2 border-t border-border/60 font-handwriting text-xs text-emerald-400">
-              ✓ Automated RCA in &lt;60s
             </div>
           </ExcalidrawCard>
         </div>
