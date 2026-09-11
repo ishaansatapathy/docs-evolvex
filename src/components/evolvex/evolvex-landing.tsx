@@ -412,24 +412,10 @@ export function EvolvexLanding() {
           className="mx-auto max-w-5xl"
         >
           {/* Eyebrow with Thally Co-Branding */}
-          <div className="mb-8 inline-flex flex-wrap items-center justify-center gap-2.5">
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3.5 py-1 text-xs font-mono text-white/80 backdrop-blur-md shadow-[0_0_20px_rgba(239,68,68,0.08)]">
-              <span className="size-2 rounded-full bg-[#ef4444] animate-ping" />
-              <span className="font-semibold text-white">EvolveX Docs</span>
-              <span className="text-white/30">✕</span>
-              <span className="text-white/50">Engineered on</span>
-              <a
-                href="https://github.com/thallylabs/thally"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-bold text-white tracking-wide hover:text-[#ef4444] transition-colors inline-flex items-center gap-1"
-              >
-                Thally OS
-                <ExternalLink className="size-2.5 text-white/50" />
-              </a>
-            </div>
-            <span className="hidden sm:inline text-xs font-medium text-white/30">·</span>
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/50">
+          {/* Eyebrow */}
+          <div className="mb-8 inline-flex items-center justify-center">
+            <p className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-4 py-1.5 text-xs font-mono font-medium uppercase tracking-[0.18em] text-white/60 backdrop-blur-md">
+              <span className="size-1.5 rounded-full bg-[#ef4444] animate-pulse" />
               Autonomous Incident Investigation on SigNoz
             </p>
           </div>
@@ -441,104 +427,153 @@ export function EvolvexLanding() {
             Break Production Systems
           </h1>
 
-          {/* Subtitle with RoughNotation Cross-Off and Curly Arrow */}
-          <div className="mx-auto mt-10 max-w-2xl text-base leading-8 text-white/62 sm:text-lg">
-            Diagnose production outages without wasting engineering hours in{' '}
-            <span className="relative inline-block">
-              {mounted ? (
-                <RoughNotation
-                  type="crossed-off"
-                  show={showCross}
-                  color="#ef4444"
-                  strokeWidth={2}
-                  padding={[2, 4]}
-                >
+          {/* Subtitle with Dual RoughNotation Sketch Annotations */}
+          <div className="mx-auto mt-10 max-w-2xl text-base leading-relaxed text-white/65 sm:text-lg flex flex-col items-center gap-12 sm:gap-14">
+            {/* Line 1: EvolveX solves blind war rooms */}
+            <div className="text-center">
+              Diagnose production outages without wasting engineering hours in{' '}
+              <span className="relative inline-block">
+                {mounted ? (
+                  <RoughNotation
+                    type="crossed-off"
+                    show={showCross}
+                    color="#ef4444"
+                    strokeWidth={2}
+                    padding={[2, 4]}
+                  >
+                    <span>blind war rooms</span>
+                  </RoughNotation>
+                ) : (
                   <span>blind war rooms</span>
-                </RoughNotation>
-              ) : (
-                <span>blind war rooms</span>
-              )}
-              {mounted && showCross && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.5, rotate: -10 }}
-                  animate={{ opacity: 1, scale: 1, rotate: 0 }}
-                  transition={{ delay: 1.8, duration: 0.5, type: 'spring' }}
-                  className="absolute -right-24 -top-12 flex flex-col items-start pointer-events-none"
-                >
-                  <div className="relative">
-                    <RoughNotation
-                      type="circle"
-                      show={true}
-                      color="#ef4444"
-                      strokeWidth={2}
-                      padding={10}
-                      animationDelay={2200}
-                    >
-                      <span className="font-handwriting text-2xl tracking-wide text-white">
-                        EvolveX
-                      </span>
-                    </RoughNotation>
+                )}
+                {mounted && showCross && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.5, rotate: -10 }}
+                    animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                    transition={{ delay: 1.8, duration: 0.5, type: 'spring' }}
+                    className="absolute -right-6 -top-11 sm:-right-22 sm:-top-12 flex flex-col items-start pointer-events-none"
+                  >
+                    <div className="relative">
+                      <RoughNotation
+                        type="circle"
+                        show={true}
+                        color="#ef4444"
+                        strokeWidth={2}
+                        padding={10}
+                        animationDelay={2200}
+                      >
+                        <span className="font-handwriting text-2xl tracking-wide text-white">
+                          EvolveX
+                        </span>
+                      </RoughNotation>
 
-                    {/* Curly Arrow */}
-                    <svg
-                      className="absolute -bottom-8 -left-10 size-12 -rotate-[15deg]"
-                      viewBox="0 0 50 50"
-                      fill="none"
-                    >
-                      <motion.path
-                        d="M10 40c5-15 15-25 25-25"
-                        stroke="#ef4444"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        initial={{ pathLength: 0 }}
-                        animate={{ pathLength: 1 }}
-                        transition={{ delay: 2.1, duration: 0.6 }}
-                      />
-                      <motion.path
-                        d="M30 10l5 5l-5 5"
-                        stroke="#ef4444"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 2.7 }}
-                      />
-                    </svg>
-                  </div>
-                </motion.div>
-              )}
-            </span>
-            .
-          </div>
-
-          {/* Thally Engine Rough Mark Callout */}
-          <div className="mx-auto mt-6 flex items-center justify-center gap-2 text-xs font-mono text-white/60">
-            <span>Interactive telemetry &amp; autonomous runbooks powered by</span>
-            {mounted ? (
-              <RoughNotation
-                type="box"
-                show={true}
-                color="#ef4444"
-                strokeWidth={1.5}
-                padding={[3, 8]}
-                animationDelay={1400}
-              >
-                <a
-                  href="https://github.com/thallylabs/thally"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-semibold text-white hover:text-[#ef4444] transition-colors inline-flex items-center gap-1.5"
-                >
-                  <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  Thally Docs Engine
-                  <ExternalLink className="size-3 text-white/50" />
-                </a>
-              </RoughNotation>
-            ) : (
-              <span className="font-semibold text-white border border-[#ef4444]/40 px-2 py-0.5 rounded">
-                Thally Docs Engine
+                      {/* Curly Arrow */}
+                      <svg
+                        className="absolute -bottom-8 -left-10 size-12 -rotate-[15deg]"
+                        viewBox="0 0 50 50"
+                        fill="none"
+                      >
+                        <motion.path
+                          d="M10 40c5-15 15-25 25-25"
+                          stroke="#ef4444"
+                          strokeWidth={2}
+                          strokeLinecap="round"
+                          initial={{ pathLength: 0 }}
+                          animate={{ pathLength: 1 }}
+                          transition={{ delay: 2.1, duration: 0.6 }}
+                        />
+                        <motion.path
+                          d="M30 10l5 5l-5 5"
+                          stroke="#ef4444"
+                          strokeWidth={2}
+                          strokeLinecap="round"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ delay: 2.7 }}
+                        />
+                      </svg>
+                    </div>
+                  </motion.div>
+                )}
               </span>
-            )}
+              .
+            </div>
+
+            {/* Line 2: The official docs of EvolveX -> Thally! in sketchy hand-drawn style */}
+            <div className="text-center text-sm sm:text-base text-white/55 flex items-center justify-center flex-wrap gap-x-2 gap-y-1">
+              <span>The official</span>
+              <span className="relative inline-block mx-1.5">
+                {mounted ? (
+                  <RoughNotation
+                    type="crossed-off"
+                    show={showCross}
+                    color="#ef4444"
+                    strokeWidth={2}
+                    padding={[2, 4]}
+                    animationDelay={1000}
+                  >
+                    <span className="text-white/40">docs</span>
+                  </RoughNotation>
+                ) : (
+                  <span className="line-through text-white/40">docs</span>
+                )}
+                {mounted && showCross && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.5, rotate: 6 }}
+                    animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                    transition={{ delay: 2.3, duration: 0.5, type: 'spring' }}
+                    className="absolute -right-6 -top-10 sm:-right-20 sm:-top-10 flex flex-col items-start"
+                  >
+                    <div className="relative">
+                      <RoughNotation
+                        type="circle"
+                        show={true}
+                        color="#ef4444"
+                        strokeWidth={2}
+                        padding={8}
+                        animationDelay={2600}
+                      >
+                        <a
+                          href="https://github.com/thallylabs/thally"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-handwriting text-2xl tracking-wide text-white hover:text-[#ef4444] transition-colors inline-block px-1 cursor-pointer"
+                        >
+                          Thally!
+                        </a>
+                      </RoughNotation>
+
+                      {/* Curly Arrow */}
+                      <svg
+                        className="absolute -bottom-7 -left-8 size-10 -rotate-[15deg] pointer-events-none"
+                        viewBox="0 0 50 50"
+                        fill="none"
+                      >
+                        <motion.path
+                          d="M10 40c5-15 15-25 25-25"
+                          stroke="#ef4444"
+                          strokeWidth={2}
+                          strokeLinecap="round"
+                          initial={{ pathLength: 0 }}
+                          animate={{ pathLength: 1 }}
+                          transition={{ delay: 2.5, duration: 0.6 }}
+                        />
+                        <motion.path
+                          d="M30 10l5 5l-5 5"
+                          stroke="#ef4444"
+                          strokeWidth={2}
+                          strokeLinecap="round"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ delay: 3.0 }}
+                        />
+                      </svg>
+                    </div>
+                  </motion.div>
+                )}
+              </span>
+              <span>of EvolveX.</span>
+            </div>
           </div>
 
           {/* Action CTAs */}
