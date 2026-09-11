@@ -1,0 +1,110 @@
+---
+title: Kubernetes Cluster Integration
+description: Deploy the evolvex-agent Helm chart to forward pod lifecycles, OOMKilled events, and deployment rollouts onto investigation timelines.
+keywords:
+  - kubernetes integration
+  - helm chart
+  - k8s event exporter
+  - oomkilled
+  - pod crashloopbackoff
+  - rollout events
+  - cluster monitoring
+---
+
+Kubernetes integration connects your cluster's event stream directly to Evolvex. When pods crash, nodes experience memory pressure, or deployment rollouts take place, these infrastructure signals are automatically correlated with application trace anomalies.
+
+<KubernetesFlow />
+
+---
+
+## 1. Supported Kubernetes event types
+
+The agent captures critical pod and workload transitions:
+- **`OOMKilled`** — Containers terminated due to cgroup memory limits.
+- **`CrashLoopBackOff`** — Repeated application startup crashes.
+- **`Deployment / ReplicaSet Rollout`** — Scale-up, scale-down, and image version updates.
+- **`Evicted / NodePressure`** — Pods evicted due to disk or memory exhaustion.
+- **`HorizontalPodAutoscaler (HPA)`** — Rapid scaling events during traffic surges.
+
+---
+
+## 2. Connect your cluster in Evolvex Settings
+
+1. Open your Evolvex workspace at `https://evolvex.ishaandev.co.in`.
+2. Navigate to **Settings → Connect Kubernetes**.
+3. Enter your cluster identifier (e.g. `production-us-east-1`).
+4. Click **Connect Kubernetes**.
+5. Evolvex generates:
+   - A unique, organization-scoped **Webhook Secret** (hashed via `secret_hash`).
+   - A ready-to-execute **Helm install command**.
+
+---
+
+## 3. Deploy the agent via Helm
+
+Execute the generated Helm command against your Kubernetes cluster:
+
+```bash
+helm repo add evolvex https://charts.evolvex.ishaandev.co.in
+helm repo update
+
+helm upgrade --install evolvex-agent evolvex/evolvex-agent \
+  --namespace evolvex \
+  --create-namespace \
+  --set webhookUrl="https://evolvex-api.ishaandev.co.in/webhooks/kubernetes" \
+  --set webhookSecret="your-unique-cluster-secret" \
+  --set clusterName="production-us-east-1"
+```
+
+<Tip>
+  If you cloned the repository locally, deploy directly from source:
+  ```bash
+  helm upgrade --install evolvex-agent ./helm/evolvex-agent \
+    --namespace evolvex \
+    --create-namespace \
+    --set webhookUrl="https://evolvex-api.ishaandev.co.in/webhooks/kubernetes" \
+    --set webhookSecret="your-unique-cluster-secret"
+  ```
+</Tip>
+
+---
+
+## 4. Live verification & status confirmation
+
+Verify that the agent pod is running cleanly in your cluster:
+
+<Terminal>
+  <TerminalInput>kubectl get pods -n evolvex -l app.kubernetes.io/name=evolvex-agent</TerminalInput>
+  <TerminalOutput>
+    NAME                             READY   STATUS    RESTARTS   AGE
+    evolvex-agent-7f9b8c64d-x2k9p   1/1     Running   0          42s
+  </TerminalOutput>
+</Terminal>
+
+The Evolvex agent emits an automated heartbeat upon startup:
+1. Return to **Settings → Connect Kubernetes** in Evolvex.
+2. The panel will automatically flip to **✅ Cluster connected** within 30 seconds (no page refresh required).
+3. The table displays:
+   - Cluster Name
+   - Last Heartbeat timestamp
+   - Agent Version
+
+---
+
+## 5. Simulating a cluster event
+
+To verify that Kubernetes events appear in open investigations:
+
+```bash
+# Simulate an OOM event by running an ephemeral container with tight memory limits
+kubectl run memory-test --image=polarsignals/stress:v0.0.1 \
+  --restart=Never \
+  --limits='memory=50Mi' \
+  -- --vm 1 --vm-bytes 100M
+```
+
+When an active investigation exists for the corresponding service, Evolvex attaches a **CHANGE (Kubernetes)** timeline entry showing:
+```text
+[CHANGE] Pod memory-test in namespace default was OOMKilled
+Container exceeded memory allocation limit (50Mi).
+```
