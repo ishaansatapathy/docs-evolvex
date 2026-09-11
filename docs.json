@@ -87,6 +87,10 @@
       {
         "label": "SigNoz Cloud",
         "href": "https://signoz.io"
+      },
+      {
+        "label": "Built on Thally",
+        "href": "https://github.com/thallylabs/thally"
       }
     ]
   },
@@ -336,6 +340,23 @@
           {
             "label": "Plugin Hub & Webhooks",
             "href": "/guides/plugins-and-webhooks"
+          }
+        ]
+      },
+      {
+        "heading": "Docs Platform",
+        "items": [
+          {
+            "label": "Built on Thally",
+            "href": "https://github.com/thallylabs/thally"
+          },
+          {
+            "label": "Thally Open-Source Runtime",
+            "href": "https://github.com/thallylabs/thally"
+          },
+          {
+            "label": "Thally Starter Template",
+            "href": "https://github.com/thallylabs/starter"
           }
         ]
       }
