@@ -304,10 +304,28 @@ export function EvolvexLanding() {
       {/* Fixed Navbar with floating glass pill and active section tracking */}
       <header className="fixed inset-x-0 top-0 z-50 flex justify-center py-4 px-4 pointer-events-none">
         <nav className="pointer-events-auto flex items-center justify-between px-6 py-2.5 max-w-7xl w-full rounded-full border border-white/10 bg-[#060608]/85 backdrop-blur-xl shadow-[0_12px_40px_rgba(0,0,0,0.7)]">
-          {/* Left: Cinematic Logo */}
-          <a href="/" className="pointer-events-auto transition-opacity hover:opacity-85 flex items-center">
-            <CinematicLogo size={36} showText={true} />
-          </a>
+          {/* Left: Cinematic Logo with Thally Docs co-branding */}
+          <div className="flex items-center gap-2.5">
+            <a href="/" className="pointer-events-auto transition-opacity hover:opacity-85 flex items-center">
+              <CinematicLogo size={36} showText={true} />
+            </a>
+            <div className="hidden sm:flex items-center gap-2 pl-2.5 border-l border-white/10 pointer-events-auto">
+              <span className="text-[10px] font-mono uppercase tracking-widest text-white/40">Docs</span>
+              <span className="text-white/25 text-xs font-mono">✕</span>
+              <a
+                href="https://github.com/thallylabs/thally"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] hover:border-white/25 transition-all"
+              >
+                <span className="size-1.5 rounded-full bg-[#ef4444] animate-pulse" />
+                <span className="text-[10px] font-mono text-white/60 group-hover:text-white">
+                  Built on <strong className="text-white font-semibold">Thally</strong>
+                </span>
+                <ExternalLink className="size-2.5 text-white/40 group-hover:text-white transition-colors" />
+              </a>
+            </div>
+          </div>
 
           {/* Center: Floating Capsule */}
           <div className="hidden md:block">
@@ -393,10 +411,28 @@ export function EvolvexLanding() {
           transition={{ duration: 0.7 }}
           className="mx-auto max-w-5xl"
         >
-          {/* Eyebrow */}
-          <p className="mb-8 text-xs font-semibold uppercase tracking-[0.16em] text-white/56">
-            Autonomous Incident Investigation OS on SigNoz
-          </p>
+          {/* Eyebrow with Thally Co-Branding */}
+          <div className="mb-8 inline-flex flex-wrap items-center justify-center gap-2.5">
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3.5 py-1 text-xs font-mono text-white/80 backdrop-blur-md shadow-[0_0_20px_rgba(239,68,68,0.08)]">
+              <span className="size-2 rounded-full bg-[#ef4444] animate-ping" />
+              <span className="font-semibold text-white">EvolveX Docs</span>
+              <span className="text-white/30">✕</span>
+              <span className="text-white/50">Engineered on</span>
+              <a
+                href="https://github.com/thallylabs/thally"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-bold text-white tracking-wide hover:text-[#ef4444] transition-colors inline-flex items-center gap-1"
+              >
+                Thally OS
+                <ExternalLink className="size-2.5 text-white/50" />
+              </a>
+            </div>
+            <span className="hidden sm:inline text-xs font-medium text-white/30">·</span>
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/50">
+              Autonomous Incident Investigation on SigNoz
+            </p>
+          </div>
 
           {/* Headline */}
           <h1 className="mx-auto max-w-[920px] font-display text-[clamp(3.1rem,6.4vw,5.9rem)] font-normal leading-[0.93] tracking-[-0.045em] text-white">
@@ -473,6 +509,36 @@ export function EvolvexLanding() {
               )}
             </span>
             .
+          </div>
+
+          {/* Thally Engine Rough Mark Callout */}
+          <div className="mx-auto mt-6 flex items-center justify-center gap-2 text-xs font-mono text-white/60">
+            <span>Interactive telemetry &amp; autonomous runbooks powered by</span>
+            {mounted ? (
+              <RoughNotation
+                type="box"
+                show={true}
+                color="#ef4444"
+                strokeWidth={1.5}
+                padding={[3, 8]}
+                animationDelay={1400}
+              >
+                <a
+                  href="https://github.com/thallylabs/thally"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-semibold text-white hover:text-[#ef4444] transition-colors inline-flex items-center gap-1.5"
+                >
+                  <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  Thally Docs Engine
+                  <ExternalLink className="size-3 text-white/50" />
+                </a>
+              </RoughNotation>
+            ) : (
+              <span className="font-semibold text-white border border-[#ef4444]/40 px-2 py-0.5 rounded">
+                Thally Docs Engine
+              </span>
+            )}
           </div>
 
           {/* Action CTAs */}
@@ -647,10 +713,14 @@ export function EvolvexLanding() {
           </div>
 
           {/* Footer Note */}
-          <div className="text-center pt-8 border-t border-white/5 text-xs text-white/40 flex items-center justify-center gap-2">
+          <div className="text-center pt-8 border-t border-white/5 text-xs text-white/40 flex flex-wrap items-center justify-center gap-2.5">
             <span className="size-2 rounded-full bg-[#ef4444] animate-pulse" />
             <span>
               Every step runs through authentic SigNoz OTLP spans, eBPF tracepoints, and PostgreSQL RLS.
+            </span>
+            <span className="text-white/20">·</span>
+            <span className="text-white/60">
+              Engineered on <strong className="text-white font-medium">Thally Runtime Platform</strong>
             </span>
           </div>
         </div>
@@ -685,6 +755,10 @@ export function EvolvexLanding() {
                 <p className="text-sm text-white/50 mt-5 leading-relaxed max-w-[320px]">
                   Built for Linux kernel eBPF &amp; SigNoz — not generic cloud dashboards.
                 </p>
+                <div className="mt-3 inline-flex items-center gap-1.5 text-[11px] font-mono text-white/40">
+                  <span className="size-1.5 rounded-full bg-emerald-400" />
+                  <span>Docs Core: <strong className="text-white/80">Thally v0.2.4</strong></span>
+                </div>
               </div>
 
               <div className="mt-12 space-y-3">
@@ -831,6 +905,14 @@ export function EvolvexLanding() {
                     Read Documentation <ArrowRight className="size-4" />
                   </a>
                   <a
+                    href="https://github.com/thallylabs/thally"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex h-12 items-center gap-2 rounded-full border border-white/15 bg-white/[0.04] px-7 text-sm font-bold text-white transition-all hover:bg-white/10 hover:border-white/30 backdrop-blur-md"
+                  >
+                    ⚡ Powered by Thally
+                  </a>
+                  <a
                     href="https://github.com/ishaansatapathy/EvolveX"
                     target="_blank"
                     rel="noopener noreferrer"
@@ -849,8 +931,21 @@ export function EvolvexLanding() {
       <footer className="relative z-20 py-20 px-5 md:px-20 border-t border-white/5 bg-[#020202]">
         <div className="mx-auto max-w-7xl flex flex-col gap-10">
           <div className="flex flex-col md:flex-row justify-between items-center gap-8">
-            <div className="flex flex-col md:flex-row items-center gap-6 md:gap-10">
+            <div className="flex flex-col md:flex-row items-center gap-4 md:gap-8">
               <CinematicLogo size={32} showText={true} />
+              <div className="hidden md:block h-6 w-[1px] bg-white/10" />
+              <a
+                href="https://github.com/thallylabs/thally"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/10 bg-white/[0.03] hover:bg-white/[0.08] hover:border-white/25 transition-all"
+              >
+                <span className="size-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="text-xs font-mono text-white/70 group-hover:text-white">
+                  Built on <strong className="text-white font-semibold">Thally Labs</strong>
+                </span>
+                <ExternalLink className="size-3 text-white/40 group-hover:text-white transition-colors" />
+              </a>
               <div className="hidden md:block h-6 w-[1px] bg-white/10" />
               <div className="flex gap-8 text-[10px] font-black uppercase tracking-[0.3em] text-white/30">
                 <span className="text-white/40 italic font-handwriting text-2xl normal-case tracking-normal">
@@ -877,6 +972,14 @@ export function EvolvexLanding() {
               >
                 <Github className="size-3" /> GitHub
               </a>
+              <a
+                href="https://github.com/thallylabs/thally"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-white transition-colors font-medium text-white/70"
+              >
+                Thally Engine
+              </a>
               <a href="/quickstart" className="hover:text-white transition-colors">Quickstart</a>
               <a href="/guides/architecture" className="hover:text-white transition-colors">Architecture</a>
               <a href="/guides/signoz-setup" className="hover:text-white transition-colors">SigNoz Setup</a>
@@ -885,10 +988,23 @@ export function EvolvexLanding() {
           </div>
 
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-6 border-t border-white/5">
-            <p className="text-[10px] uppercase tracking-[0.35em] text-white/30 font-bold">
-              © 2026 Evolvex OS — Autonomous Investigation on SigNoz
+            <p className="text-[10px] uppercase tracking-[0.25em] text-white/40 font-mono">
+              © 2026 Evolvex OS — Autonomous Investigation on SigNoz · Engineered on{' '}
+              <a
+                href="https://github.com/thallylabs/thally"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-white font-semibold hover:text-[#ef4444] transition-colors underline underline-offset-4 decoration-white/20"
+              >
+                Thally Documentation Runtime
+              </a>
             </p>
-            <div className="h-[1px] w-16 bg-[#ef4444]/40" />
+            <div className="flex items-center gap-3">
+              <span className="text-[10px] font-mono text-white/30 tracking-wider">
+                Thally v0.2.4 · Next.js · OpenTelemetry
+              </span>
+              <div className="h-[1px] w-12 bg-[#ef4444]/40" />
+            </div>
           </div>
         </div>
       </footer>
