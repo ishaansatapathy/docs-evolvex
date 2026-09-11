@@ -1,0 +1,99 @@
+---
+title: Automated Postmortems & SigNoz Dashboards
+description: Generate exportable incident postmortem packs with live SigNoz Query API citations, and provision Service Overview dashboards in one click.
+keywords:
+  - postmortem pack
+  - export postmortem
+  - signoz dashboard setup
+  - service overview dashboard
+  - incident reporting
+  - automated rc docs
+---
+
+Resolving an outage is only half the battle. High-reliability engineering teams require post-incident reviews (postmortems) to document timeline citations, root causes, and action items, along with dedicated monitoring dashboards to verify stabilization.
+
+Evolvex provides two automated workflows:
+1. **Automated Postmortem Pack Generation** (`pnpm signoz:postmortem-pack` or one-click export).
+2. **Programmatic SigNoz Dashboard Provisioning** (`pnpm signoz:dashboard-setup` or one-click creation).
+
+---
+
+## 1. Automated Postmortem Pack (`signoz:postmortem-pack`)
+
+Instead of engineers manually copying timestamps and log snippets into documents, Evolvex queries the live SigNoz Query API v5 and assembles a production-ready Markdown report:
+
+```bash
+# Compile a 60-minute postmortem evidence pack for payments-svc
+pnpm signoz:postmortem-pack --service payments-svc --window 60
+```
+
+### Options:
+- `--service <name>`: Service name (defaults to `SIGNOZ_DEFAULT_SERVICE_NAME` or `payments-svc`).
+- `--rule <id>`: SigNoz alert rule UUID (skips auto-lookup by alert name).
+- `--window <minutes>`: Evidence window in minutes (defaults to 60).
+
+### Generated Report Structure:
+The generated markdown file is saved to `postmortems/<timestamp>-<service>.md`:
+
+```markdown
+# Postmortem: payments-svc
+
+**Generated:** 2026-09-11T01:45:00.000Z  
+**Evidence Window:** Last 60 minutes  
+**Source:** Live SigNoz Query API v5 + Evolvex Investigation Timeline
+
+## 1. Executive Summary
+During the 60-minute window, `payments-svc` experienced a severe p99 latency spike (peaking at 1,420ms) and an elevated 5xx error rate.
+
+## 2. Alert Rule State History
+- **Rule:** `p99 latency spike — payments-svc` (`uuid-4820-bca1`)
+- **Fired:** 01:22:15Z
+- **Resolved:** 01:41:00Z
+- **Duration:** 18m 45s
+
+## 3. Top Error Traces (SigNoz Query API v5)
+- `8f10a2bc91` — `POST /checkout` — 1,420.2ms — **error** (01:23:40Z)
+  - Exception: `RedisConnectionPoolExhausted: Timeout waiting for connection`
+- `8f10a2bc95` — `POST /checkout` — 1,380.0ms — **error** (01:24:12Z)
+
+## 4. Sample Correlated Error Logs
+- `[ERROR] 01:23:40Z — Redis connection pool exhausted: 20/20 connections in use`
+- `[WARN]  01:23:41Z — Retrying connection to redis-primary.internal (attempt 1/3)`
+
+## 5. Timeline of Contributing Factors
+1. `01:18:00Z` [DEPLOY] Commit `fc35fd4` by Ishaan Satapathy deployed via CI/CD.
+2. `01:20:00Z` [CHANGE] Feature flag `new-checkout` rolled out to 100% traffic.
+3. `01:22:15Z` [ALERT] SigNoz alert rule threshold exceeded.
+4. `01:35:00Z` [CHANGE] Hotfix mitigation applied (pool resized to 100).
+```
+
+### In-App One-Click Export
+In the Evolvex web console, navigate to any active or resolved investigation. Click **Export ↓ → Download Postmortem Markdown** to immediately download the synthesized report.
+
+---
+
+## 2. Programmatic SigNoz Dashboard Setup (`signoz:dashboard-setup`)
+
+Evolvex mirrors the SigNoz Terraform provider (`signoz_dashboard`) by provisioning a 3-widget **Service Overview Dashboard** via `POST /api/v1/dashboards`:
+
+```bash
+# Provision a standard dashboard for payments-svc
+pnpm signoz:dashboard-setup --service payments-svc --title "Payments Service - Reliability Overview"
+```
+
+### Dashboard Widgets Provisioned:
+1. **Request Rate (QPS)**: Live calls per second aggregated from trace metrics (`signoz_calls_total`).
+2. **Error Rate (%)**: Percentage of HTTP 5xx responses and span errors.
+3. **p99 Latency Histogram**: 99th percentile response duration computed by SigNoz ClickHouse.
+
+```text
+✓ Created dashboard "Payments Service - Reliability Overview"
+  https://your-org.in2.signoz.cloud/dashboard/f82901a4-99b0-4f21-8201
+```
+
+### In-App One-Click Creation
+Inside any investigation case, open the **Export** menu and select **"Create SigNoz dashboard"**. Evolvex:
+1. Constructs the dashboard payload scoped to the case's primary service.
+2. Calls the SigNoz Dashboards API using your workspace's stored API key.
+3. Drops an audit entry on the investigation timeline.
+4. Opens the newly created dashboard in a new browser tab.
