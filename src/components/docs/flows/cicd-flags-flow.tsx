@@ -21,47 +21,43 @@ export function CicdFlagsFlow() {
 
   return (
     <ExcalidrawCanvas
-      title="CI/CD Pipelines & Feature Flags Correlation Flow"
-      subtitle="Correlating pipeline test failures and feature flag rollouts with SigNoz error traces"
+      title="CI/CD & Feature Flags Correlation"
+      subtitle="Pipeline failures and flag rollouts correlated with SigNoz error traces"
       onSimulate={handleSimulate}
       isSimulating={isSimulating}
       stepProgress={
         activeSide === 'cicd'
-          ? 'CI/CD Build Failure Correlated'
+          ? 'CI Build Failure Correlated'
           : activeSide === 'flags'
-          ? 'Flag Rollout Matched to Spike'
+          ? 'Flag Rollout Matched'
           : ''
       }
     >
-      <div className="space-y-4 max-w-4xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="space-y-3 max-w-4xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {/* CI/CD Card */}
           <ExcalidrawCard
             id="cicd-hook"
             title="GitHub Actions / GitLab CI"
             subtitle="Integration test failures & retries"
             badge="POST /webhooks/cicd"
-            badgeColor="#6366F1"
-            accentColor="#6366F1"
+            badgeColor="#7b7db8"
+            accentColor="#7b7db8"
             icon={Workflow}
-            roughType="box"
-            roughColor="#6366F1"
             isActive={activeSide === 'cicd'}
             isSimulated={activeSide === 'cicd'}
             onMouseEnter={() => setActiveSide('cicd')}
             details={{
               endpoint: 'POST /webhooks/cicd',
-              credential: 'Header: x-evolvex-cicd-secret',
-              protocol: 'Webhook JSON Payload',
-              note: 'Pins test failure logs and retry cascades onto the incident timeline.',
+              credential: 'x-evolvex-cicd-secret',
+              protocol: 'Webhook JSON',
+              note: 'Pins test failure logs onto the incident timeline.',
             }}
           >
-            <div className="p-2 rounded bg-muted/40 border border-border/70 text-xs font-mono text-muted-foreground mt-1">
-              <span className="text-foreground font-semibold">Event: </span>
-              workflow_job.completed (failure)
+            <div className="px-2 py-1.5 rounded-md bg-muted/20 border border-border/30 text-[11px] font-mono text-muted-foreground/60 mt-1">
+              <span className="text-foreground/70 font-medium">Event:</span> workflow_job.completed (failure)
               <br />
-              <span className="text-foreground font-semibold">Job: </span>
-              cypress-e2e-checkout
+              <span className="text-foreground/70 font-medium">Job:</span> cypress-e2e-checkout
             </div>
           </ExcalidrawCard>
 
@@ -70,64 +66,58 @@ export function CicdFlagsFlow() {
             id="flags-hook"
             title="LaunchDarkly / Unleash"
             subtitle="Flag toggle: new-checkout (100%)"
-            badge="POST /webhooks/feature-flags"
-            badgeColor="#F59E0B"
-            accentColor="#F59E0B"
+            badge="POST /webhooks/flags"
+            badgeColor="#b89b6b"
+            accentColor="#b89b6b"
             icon={Sliders}
-            roughType="box"
-            roughColor="#F59E0B"
             isActive={activeSide === 'flags'}
             isSimulated={activeSide === 'flags'}
             onMouseEnter={() => setActiveSide('flags')}
             details={{
               endpoint: 'POST /webhooks/feature-flags',
-              credential: 'Header: x-evolvex-flag-secret',
-              protocol: 'Webhook JSON Payload',
-              note: 'Detects exact second flag was toggled relative to error rate spike.',
+              credential: 'x-evolvex-flag-secret',
+              protocol: 'Webhook JSON',
+              note: 'Detects exact second flag was toggled relative to error spike.',
             }}
           >
-            <div className="p-2 rounded bg-muted/40 border border-border/70 text-xs font-mono text-muted-foreground mt-1">
-              <span className="text-foreground font-semibold">Flag: </span>
-              checkout-v2-stripe-elements
+            <div className="px-2 py-1.5 rounded-md bg-muted/20 border border-border/30 text-[11px] font-mono text-muted-foreground/60 mt-1">
+              <span className="text-foreground/70 font-medium">Flag:</span> checkout-v2-stripe-elements
               <br />
-              <span className="text-foreground font-semibold">Action: </span>
-              Rollout increased 10% → 100%
+              <span className="text-foreground/70 font-medium">Action:</span> Rollout 10% → 100%
             </div>
           </ExcalidrawCard>
         </div>
 
         <HandDrawnArrow
           direction="down"
-          label="Multi-Tenant Signal Ingestion"
-          sublabel="Org-scoped secret_hash lookup in O(1)"
-          color="#00CC66"
+          label="Signal Ingestion"
+          sublabel="org-scoped secret_hash"
+          color="#6b9e6b"
           isActive={activeSide !== null}
-          length={40}
+          length={36}
         />
 
-        {/* Evolvex Incident Card */}
+        {/* Evolvex Card */}
         <ExcalidrawCard
           id="evolvex-changes"
-          title="Evolvex Investigation OS"
-          subtitle="Change Event Correlation & Evidence Timeline Synthesis"
-          badge="Verified Change Cause"
-          badgeColor="#00CC66"
-          accentColor="#00CC66"
+          title="Evolvex Investigation"
+          subtitle="Change Event Correlation & Timeline Synthesis"
+          badge="Verified Change"
+          badgeColor="#6b9e6b"
+          accentColor="#6b9e6b"
           icon={ShieldAlert}
-          roughType="box"
-          roughColor="#00CC66"
           isActive={activeSide !== null}
           details={{
-            note: 'Automatically pins a CHANGE event to the timeline: "Turned on flag New Checkout on payments-svc".',
+            note: 'Pins CHANGE event: "Turned on flag New Checkout on payments-svc".',
           }}
         >
-          <div className="p-2 rounded bg-amber-500/10 border border-amber-500/30 text-xs font-mono">
-            <span className="font-bold text-amber-400">Timeline Entry: </span>
-            <span className="text-foreground">
-              CHANGE: Flag &apos;checkout-v2-stripe-elements&apos; enabled 90s before 5xx error spike
+          <div className="px-2 py-1.5 rounded-md bg-muted/20 border border-border/30 text-[11px] font-mono mt-1">
+            <span className="font-medium text-foreground/70">Timeline Entry:</span>{' '}
+            <span className="text-foreground/60">
+              CHANGE: Flag 'checkout-v2-stripe-elements' enabled 90s before 5xx spike
             </span>
-            <p className="text-[11px] text-muted-foreground mt-1">
-              Recommendation: Revert flag toggle to mitigate customer impact immediately.
+            <p className="text-[10px] text-muted-foreground/50 mt-0.5">
+              Recommendation: Revert flag toggle to mitigate customer impact.
             </p>
           </div>
         </ExcalidrawCard>
