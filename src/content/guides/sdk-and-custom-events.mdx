@@ -1,0 +1,163 @@
+---
+title: TypeScript SDK & Custom Events
+description: Use the official typed @evolvex/sdk client to query active investigations, attach custom metadata, and emit business-context timeline events.
+keywords:
+  - evolvex sdk
+  - typescript sdk
+  - custom events
+  - timeline entries
+  - incident api
+  - attach metadata
+---
+
+The official `@evolvex/sdk` package provides a typed, promise-based client for interacting with Evolvex programmatically. Internal platforms, CLI tooling, deployment scripts, and test runners can use the SDK to query active investigations, attach diagnostic metadata, or push custom timeline events.
+
+<SdkEventsFlow />
+
+---
+
+## 1. Installation & Initialization
+
+Install the package into your TypeScript or Node.js project:
+
+```bash
+npm install @evolvex/sdk
+# or
+pnpm add @evolvex/sdk
+```
+
+Initialize the client with your Evolvex API base URL and workspace API key:
+
+```typescript
+import { createEvolvexClient } from "@evolvex/sdk";
+
+const client = createEvolvexClient({
+  baseUrl: process.env.EVOLVEX_API_URL ?? "https://evolvex-api.ishaandev.co.in/api/v1/sdk",
+  apiKey: process.env.EVOLVEX_API_KEY, // Obtained from Evolvex Settings → API Keys
+});
+```
+
+---
+
+## 2. Listing & Inspecting Investigations
+
+Query open or resolved investigations with multi-dimensional filtering:
+
+```typescript
+// Fetch up to 10 high-severity investigations for payments-svc
+const { investigations } = await client.listInvestigations({
+  service: "payments-svc",
+  severity: "critical",
+  limit: 10,
+});
+
+for (const incident of investigations) {
+  console.log(`[${incident.shortId}] ${incident.title}`);
+  console.log(`Status: ${incident.caseStatus} · Severity: ${incident.severity}`);
+  console.log(`Affected: ${incident.affectedServices.join(", ")}`);
+}
+
+// Fetch single investigation details by ID
+const { investigation } = await client.getInvestigation(investigations[0].id);
+console.log("Created at:", investigation.createdAt);
+```
+
+---
+
+## 3. Retrieving & Appending to Causal Timelines
+
+Every investigation maintains a chronological evidence timeline. You can read the timeline or inject custom operational events directly:
+
+```typescript
+const investigationId = "inv_01j4k9m...";
+
+// 1. Fetch current timeline entries
+const { timeline } = await client.getTimeline(investigationId);
+for (const entry of timeline) {
+  console.log(`[${entry.kind}] ${entry.occurredAt} — ${entry.title}`);
+  console.log(`  ${entry.detail}`);
+}
+
+// 2. Inject a custom timeline event
+const newEvent = await client.createTimelineEvent(investigationId, {
+  title: "Database pool resized to 100 connections",
+  detail: "Executed automated mitigation script db-pool-boost.sh following p99 spike.",
+  kind: "CHANGE",
+  source: "sre-automation-runner",
+  metadata: {
+    poolSizeBefore: 20,
+    poolSizeAfter: 100,
+    scriptRunId: "run_8f10a2",
+  },
+});
+
+console.log("Injected timeline event ID:", newEvent.timelineEntryId);
+```
+
+### Supported Timeline Event Kinds:
+- **`ALERT`**: Threshold violations and external monitoring alerts.
+- **`DEPLOY`**: Code releases, rollouts, and Git commits.
+- **`CHANGE`**: Infrastructure alterations, configuration updates, and feature flag flips.
+- **`METRIC`**: Anomaly detection spikes (e.g. CPU, latency, memory).
+- **`LOG`**: Correlated log errors and stack traces.
+- **`TRACE`**: Distributed trace spans and dependency bottlenecks.
+- **`EBPF`**: Linux kernel socket drops and TCP retransmits.
+- **`AI`**: Automated root-cause deductions and synthesized remediation notes.
+
+---
+
+## 4. Attaching Diagnostic Metadata
+
+Attach arbitrary structured JSON metadata to an investigation without altering the core schema. Evolvex indexes metadata keys for contextual correlation:
+
+```typescript
+await client.attachMetadata(
+  investigationId,
+  {
+    runbookUrl: "https://wiki.corp.internal/runbooks/payments-pool",
+    incidentLead: "ishaan@example.com",
+    canaryTrafficPercentage: 15,
+    kubernetesCluster: "production-us-east-1",
+  },
+  "Attached runbook URL and traffic percentage from CI runner."
+);
+```
+
+---
+
+## 5. Pushing Custom Standalone Events
+
+If an incident is not yet opened, or if you want Evolvex to automatically attach your signal to any active investigation matching the service:
+
+```typescript
+const push = await client.pushCustomEvent({
+  title: "PostgreSQL read-replica failover initiated",
+  detail: "Primary db node degraded; switched active traffic to replica db-replica-02.",
+  service: "payments-svc",
+  source: "cloud-dba-bot",
+  occurredAt: new Date().toISOString(),
+  metadata: {
+    region: "us-east-1",
+    oldPrimary: "db-primary-01",
+    newPrimary: "db-replica-02",
+  },
+});
+
+console.log(push.message);
+console.log("Attached to active investigations:", push.attachedInvestigationIds);
+```
+
+---
+
+## 6. Running the SDK Demo Script
+
+To test the SDK against your running Evolvex instance:
+
+```bash
+# Set your API base URL and key
+export BASE_URL="http://localhost:8000"
+export EVOLVEX_API_KEY="your-workspace-api-key"
+
+# Run the live verification script
+pnpm sdk:demo
+```
