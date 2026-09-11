@@ -162,10 +162,12 @@ export const siteConfig: SiteConfig = {
   name: 'Evolvex',
   description:
     'AI-Powered Multi-Tenant Investigation OS on top of SigNoz. Correlates alerts, traces, logs, eBPF, K8s, and deploys.',
-  repoUrl: 'https://github.com/thallylabs/evolvex',
+  repoUrl: 'https://github.com/ishaansatapathy/EvolveX',
   links: [
+    { label: 'Live Console', href: 'https://evolvex.ishaandev.co.in' },
     { label: 'Get started', href: '/quickstart' },
     { label: 'API Reference', href: '/api/introduction' },
+    { label: 'GitHub', href: 'https://github.com/ishaansatapathy/EvolveX' },
     { label: 'Changelog', href: '/changelog' },
   ],
   brand: brandPresets[brandPreset],
