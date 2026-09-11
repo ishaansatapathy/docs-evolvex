@@ -58,13 +58,13 @@ export function QuickstartFlow() {
       isSimulating={simulatingStep !== null}
       stepProgress={getStepProgressLabel()}
     >
-      <div className="flex flex-col items-center max-w-4xl mx-auto">
+      <div className="flex flex-col items-center min-w-[780px] max-w-4xl mx-auto">
         {/* ================= TIER 1: APPLICATION RUNTIME ================= */}
         <div className="w-full">
-          <div className="flex items-center justify-between mb-1.5 px-1">
-            <span className="font-mono text-xs font-semibold text-sky-400/90 uppercase tracking-wider flex items-center gap-1.5">
+          <div className="flex items-center justify-between mb-2 px-1">
+            <span className="font-mono text-xs font-semibold text-sky-400 uppercase tracking-wider flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-sky-400 animate-pulse" />
-              01 • Ingestion Source
+              Ingestion Source
             </span>
             <StickyNote text="Node.js · Python · Go · Java · Rust" color="#38BDF8" rotation={1} />
           </div>
@@ -73,12 +73,14 @@ export function QuickstartFlow() {
             id="app"
             title="Your Application Runtime"
             subtitle="OpenTelemetry SDK & OTLP Exporter"
+            stepNumber="01"
             badge="OTLP / Port 4318"
             badgeColor="#38BDF8"
             accentColor="#38BDF8"
             icon={Cpu}
-            roughType="box"
+            roughType="highlight"
             roughColor="#38BDF8"
+            seed={111}
             isActive={activeCard === 'app'}
             isSimulated={simulatingStep === 1}
             onMouseEnter={() => setActiveCard('app')}
@@ -100,10 +102,10 @@ export function QuickstartFlow() {
             }}
           >
             <div className="flex flex-wrap items-center gap-2 mt-1">
-              <span className="px-2 py-0.5 rounded text-[11px] font-mono bg-muted/60 text-foreground/80 border border-border/70">
+              <span className="px-2 py-0.5 rounded text-[11px] font-mono bg-muted/70 text-foreground border border-border/80">
                 @opentelemetry/sdk-node
               </span>
-              <span className="px-2 py-0.5 rounded text-[11px] font-mono bg-muted/60 text-foreground/80 border border-border/70">
+              <span className="px-2 py-0.5 rounded text-[11px] font-mono bg-muted/70 text-foreground border border-border/80">
                 HTTP / gRPC Exporter
               </span>
               <span className="px-2 py-0.5 rounded text-[11px] font-mono bg-sky-500/10 text-sky-400 border border-sky-500/30">
@@ -113,6 +115,9 @@ export function QuickstartFlow() {
             <p className="mt-2 text-xs text-muted-foreground">
               Your service emits traces, error logs, and metrics directly to SigNoz without passing through any third-party proxy.
             </p>
+            <div className="mt-2.5 pt-2 border-t border-border/60 font-handwriting text-xs text-sky-400">
+              ⤹ direct OTLP stream to SigNoz collector
+            </div>
           </ExcalidrawCard>
         </div>
 
@@ -128,24 +133,26 @@ export function QuickstartFlow() {
 
         {/* ================= TIER 2: SIGNOZ PLATFORM ================= */}
         <div className="w-full">
-          <div className="flex items-center justify-between mb-1.5 px-1">
-            <span className="font-mono text-xs font-semibold text-rose-400/90 uppercase tracking-wider flex items-center gap-1.5">
+          <div className="flex items-center justify-between mb-2 px-1">
+            <span className="font-mono text-xs font-semibold text-rose-400 uppercase tracking-wider flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-rose-400" />
-              02 • Telemetry Store & Alerting
+              Telemetry Store & Alerting
             </span>
             <StickyNote text="ClickHouse OLAP Storage" color="#F43F5E" rotation={-1.5} />
           </div>
 
           <ExcalidrawCard
             id="signoz"
-            title="SigNoz Cloud / Self-Hosted Foundry"
+            title="SigNoz Cloud / Self-Hosted"
             subtitle="Alert Rules Engine & Notification Channels"
+            stepNumber="02"
             badge="Alert Triggered"
             badgeColor="#F43F5E"
             accentColor="#F43F5E"
             icon={Flame}
-            roughType="box"
+            roughType="highlight"
             roughColor="#F43F5E"
+            seed={222}
             isActive={activeCard === 'signoz'}
             isSimulated={simulatingStep === 2}
             onMouseEnter={() => setActiveCard('signoz')}
@@ -169,19 +176,22 @@ export function QuickstartFlow() {
             }}
           >
             <div className="flex flex-wrap items-center gap-2 mt-1">
-              <span className="px-2 py-0.5 rounded text-[11px] font-mono bg-muted/60 text-foreground/80 border border-border/70">
+              <span className="px-2 py-0.5 rounded text-[11px] font-mono bg-muted/70 text-foreground border border-border/80">
                 Rule: 5xx Spikes & Latency Anomaly
               </span>
               <span className="px-2 py-0.5 rounded text-[11px] font-mono bg-rose-500/10 text-rose-400 border border-rose-500/30">
                 Webhook + Basic Auth
               </span>
-              <span className="px-2 py-0.5 rounded text-[11px] font-mono bg-muted/60 text-foreground/80 border border-border/70">
+              <span className="px-2 py-0.5 rounded text-[11px] font-mono bg-muted/70 text-foreground border border-border/80">
                 ClickHouse Query API v5
               </span>
             </div>
             <p className="mt-2 text-xs text-muted-foreground">
               Evaluates metric thresholds continuously. When an incident fires, the notification channel delivers a webhook payload to Evolvex with basic authentication.
             </p>
+            <div className="mt-2.5 pt-2 border-t border-border/60 font-handwriting text-xs text-rose-400">
+              ⤷ evaluates rules in ClickHouse every 60s
+            </div>
           </ExcalidrawCard>
         </div>
 
@@ -197,10 +207,10 @@ export function QuickstartFlow() {
 
         {/* ================= TIER 3: EVOLVEX INVESTIGATION OS ================= */}
         <div className="w-full">
-          <div className="flex items-center justify-between mb-1.5 px-1">
+          <div className="flex items-center justify-between mb-2 px-1">
             <span className="font-mono text-xs font-semibold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              03 • Autonomous Investigation Engine
+              Autonomous Investigation Engine
             </span>
             <StickyNote text="O(1) Ingestion · Multi-Tenant Vault" color="#00CC66" rotation={1.5} />
           </div>
@@ -209,12 +219,14 @@ export function QuickstartFlow() {
             id="evolvex"
             title="Evolvex Investigation OS"
             subtitle="Autonomous Root-Cause Synthesis & Temporal Correlation"
+            stepNumber="03"
             badge="Live Incident Case"
             badgeColor="#00CC66"
             accentColor="#00CC66"
             icon={ShieldAlert}
-            roughType="box"
+            roughType="highlight"
             roughColor="#00CC66"
+            seed={333}
             isActive={activeCard === 'evolvex'}
             isSimulated={simulatingStep === 3}
             onMouseEnter={() => setActiveCard('evolvex')}
@@ -236,7 +248,7 @@ export function QuickstartFlow() {
             }}
           >
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-2">
-              <div className="p-2 rounded bg-muted/40 border border-border/70 text-xs">
+              <div className="p-2 rounded bg-muted/50 border border-border/80 text-xs">
                 <span className="font-mono font-semibold text-foreground flex items-center gap-1">
                   <Activity className="w-3.5 h-3.5 text-emerald-400" />
                   Span Correlator
@@ -245,7 +257,7 @@ export function QuickstartFlow() {
                   Aggregates p99 trace waterfalls & error exceptions.
                 </p>
               </div>
-              <div className="p-2 rounded bg-muted/40 border border-border/70 text-xs">
+              <div className="p-2 rounded bg-muted/50 border border-border/80 text-xs">
                 <span className="font-mono font-semibold text-foreground flex items-center gap-1">
                   <Radio className="w-3.5 h-3.5 text-sky-400" />
                   eBPF OBI Probes
@@ -254,7 +266,7 @@ export function QuickstartFlow() {
                   Pinpoints kernel socket drops (kfree_skb).
                 </p>
               </div>
-              <div className="p-2 rounded bg-muted/40 border border-border/70 text-xs">
+              <div className="p-2 rounded bg-muted/50 border border-border/80 text-xs">
                 <span className="font-mono font-semibold text-foreground flex items-center gap-1">
                   <GitPullRequest className="w-3.5 h-3.5 text-purple-400" />
                   Deploy Diffs
@@ -263,6 +275,10 @@ export function QuickstartFlow() {
                   Matches error stack traces to commit diffs.
                 </p>
               </div>
+            </div>
+
+            <div className="mt-2.5 pt-2 border-t border-border/60 font-handwriting text-xs text-emerald-400">
+              ✓ correlates traces, kernel drops, and git commits into verified timeline
             </div>
           </ExcalidrawCard>
         </div>
@@ -290,6 +306,7 @@ export function QuickstartFlow() {
             icon={Database}
             roughType="underline"
             roughColor="#38BDF8"
+            seed={444}
             isActive={activeCard === 'signoz-api'}
             isSimulated={simulatingStep === 4}
             onMouseEnter={() => setActiveCard('signoz-api')}
@@ -315,6 +332,7 @@ export function QuickstartFlow() {
             icon={GitPullRequest}
             roughType="underline"
             roughColor="#A855F7"
+            seed={555}
             isActive={activeCard === 'github-api'}
             isSimulated={simulatingStep === 4}
             onMouseEnter={() => setActiveCard('github-api')}
@@ -340,6 +358,7 @@ export function QuickstartFlow() {
             icon={Bell}
             roughType="underline"
             roughColor="#F59E0B"
+            seed={666}
             isActive={activeCard === 'slack-jira'}
             isSimulated={simulatingStep === 4}
             onMouseEnter={() => setActiveCard('slack-jira')}

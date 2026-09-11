@@ -11,10 +11,8 @@ import {
   ShieldCheck,
   Database,
   Laptop,
-  ArrowDown,
   Lock,
   Layers,
-  Sparkles,
   Zap,
 } from 'lucide-react'
 import {
@@ -131,7 +129,7 @@ export function ArchitectureFlow() {
           : ''
       }
     >
-      <div className="flex flex-col items-center max-w-5xl mx-auto space-y-4">
+      <div className="flex flex-col items-center min-w-[860px] max-w-5xl mx-auto space-y-4 p-1">
         {/* ================= TOP ROW: 6 MULTI-SIGNAL INGESTION SOURCES ================= */}
         <div className="w-full">
           <div className="flex items-center justify-between mb-2 px-1">
@@ -142,7 +140,7 @@ export function ArchitectureFlow() {
             <StickyNote text="Raw Ingestion Plane · Zero Data Alteration" color="#00CC66" rotation={-1} />
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
+          <div className="grid grid-cols-6 gap-2.5">
             {INGESTION_SOURCES.map((source) => {
               const Icon = source.icon
               const isSelected = selectedSource === source.id
@@ -218,12 +216,14 @@ export function ArchitectureFlow() {
             id="api"
             title="Evolvex API (Express + tRPC + REST)"
             subtitle="Multi-Tenant Vault, Secret-Hash Routing & Worker Dispatch"
+            stepNumber="01"
             badge="AES-256-GCM Vault"
             badgeColor="#00CC66"
             accentColor="#00CC66"
             icon={ShieldCheck}
-            roughType="box"
+            roughType="highlight"
             roughColor="#00CC66"
+            seed={811}
             isActive={simStep === 2}
             isSimulated={simStep === 2}
             details={{
@@ -264,6 +264,10 @@ export function ArchitectureFlow() {
                 </p>
               </div>
             </div>
+
+            <div className="mt-2.5 pt-2 border-t border-border/60 font-handwriting text-xs text-emerald-400">
+              ⤹ decrypts workspace secrets in-memory only
+            </div>
           </ExcalidrawCard>
         </div>
 
@@ -283,12 +287,14 @@ export function ArchitectureFlow() {
             id="database"
             title="PostgreSQL (Investigation Database)"
             subtitle="Immutable Audit Log, Temporal Evidence & Incident Knowledge Base"
+            stepNumber="02"
             badge="Relational Schema"
             badgeColor="#38BDF8"
             accentColor="#38BDF8"
             icon={Database}
-            roughType="box"
+            roughType="highlight"
             roughColor="#38BDF8"
+            seed={822}
             isActive={simStep === 3}
             isSimulated={simStep === 3}
             details={{
@@ -319,6 +325,9 @@ export function ArchitectureFlow() {
             <p className="mt-2 text-xs text-muted-foreground">
               Provides immutable snapshot tracking for incident reviews, SLA calculations, and audit postmortems.
             </p>
+            <div className="mt-2.5 pt-2 border-t border-border/60 font-handwriting text-xs text-sky-400">
+              ⤷ temporal relational integrity
+            </div>
           </ExcalidrawCard>
         </div>
 
@@ -338,12 +347,14 @@ export function ArchitectureFlow() {
             id="console"
             title="React UI Console (Next.js Application)"
             subtitle="Investigations, Dynamic Service Topology & Interactive Trace Explorer"
+            stepNumber="03"
             badge="Customer Console"
             badgeColor="#A855F7"
             accentColor="#A855F7"
             icon={Laptop}
-            roughType="box"
+            roughType="highlight"
             roughColor="#A855F7"
+            seed={833}
             isActive={simStep === 4}
             isSimulated={simStep === 4}
             details={{
@@ -369,6 +380,9 @@ export function ArchitectureFlow() {
                 <span className="font-semibold text-foreground">Settings Vault</span>
                 <p className="text-[10px] text-muted-foreground mt-0.5">Encrypted keys</p>
               </div>
+            </div>
+            <div className="mt-2.5 pt-2 border-t border-border/60 font-handwriting text-xs text-purple-400">
+              ✓ realtime updates via websocket & tRPC
             </div>
           </ExcalidrawCard>
         </div>
