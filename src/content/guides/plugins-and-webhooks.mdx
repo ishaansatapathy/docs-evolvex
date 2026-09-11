@@ -1,0 +1,152 @@
+---
+title: Extensible Webhook Plugins
+description: Ingest signals from Prometheus Alertmanager, Datadog alerts, and Security scanners into unified Evolvex investigation timelines.
+keywords:
+  - plugins
+  - webhook plugins
+  - prometheus alertmanager
+  - datadog import
+  - security scanner
+  - custom webhooks
+---
+
+While SigNoz is the primary telemetry and alerting data plane, real-world microservice environments often receive supplementary notifications from external systems—such as **Prometheus Alertmanager**, **Datadog alerts**, or automated **Security vulnerability scanners**.
+
+Evolvex provides an extensible plugin system mounted at:
+```text
+POST /webhooks/plugins/:pluginId
+```
+Authenticated via the per-workspace header:
+```text
+x-evolvex-plugin-secret: <your-workspace-plugin-secret>
+```
+
+---
+
+## 1. Supported Plugin Identifiers
+
+| Plugin ID | Description | Primary Payload Mapping |
+| :--- | :--- | :--- |
+| **`prometheus-alertmanager`** | Native Prometheus alert schema | Translates `alerts[].labels` and `annotations.summary` into investigation timeline events. |
+| **`datadog-import`** | Datadog alert notifications | Maps `alert_title`, `service`, and `env` tags onto the active service incident. |
+| **`security-scanner`** | Vulnerability / posture scans | Ingests CVE findings, public S3 bucket alerts, and remediation guidelines. |
+| **`custom-events`** | Generic JSON events | Flexible payload with `title`, `detail`, `service`, and arbitrary metadata. |
+
+---
+
+## 2. Configuring Plugins in Evolvex Settings
+
+1. Open Evolvex at `https://evolvex.ishaandev.co.in`.
+2. Navigate to **Settings → Plugins**.
+3. Under the desired plugin (e.g. *Prometheus Alertmanager* or *Security Scanner*), click **Install / Enable**.
+4. Evolvex generates an organization-scoped **Plugin Secret**.
+5. Copy the generated Webhook URL:
+   ```text
+   https://evolvex-api.ishaandev.co.in/webhooks/plugins/<pluginId>
+   ```
+
+---
+
+## 3. Plugin Payload Examples & Testing
+
+<Tabs>
+  <Tab title="Prometheus Alertmanager">
+    Configure Alertmanager to forward firing alerts to Evolvex:
+
+    ```yaml
+    # alertmanager.yml
+    receivers:
+      - name: 'evolvex-webhook'
+        webhook_configs:
+          - url: 'https://evolvex-api.ishaandev.co.in/webhooks/plugins/prometheus-alertmanager'
+            send_resolved: true
+            http_config:
+              bearer_token: '<your-workspace-plugin-secret>' # or custom header
+    ```
+
+    Sample payload:
+    ```json
+    {
+      "status": "firing",
+      "externalURL": "http://prometheus:9090",
+      "commonLabels": {
+        "alertname": "HighErrorRate",
+        "service": "payments-svc"
+      },
+      "alerts": [
+        {
+          "status": "firing",
+          "labels": {
+            "alertname": "HighErrorRate",
+            "service": "payments-svc",
+            "severity": "critical"
+          },
+          "annotations": {
+            "summary": "Error rate above 20% for 5m",
+            "description": "payments-svc returning 5xx on /checkout"
+          },
+          "startsAt": "2026-09-11T01:40:00Z"
+        }
+      ]
+    }
+    ```
+  </Tab>
+
+  <Tab title="Datadog Alert Import">
+    Forward Datadog monitor notifications into Evolvex:
+
+    ```json
+    {
+      "alert_title": "High error rate on payments-svc",
+      "alert_body": "Error rate exceeded threshold (15%) in production",
+      "service": "payments-svc",
+      "tags": "env:production,service:payments-svc"
+    }
+    ```
+  </Tab>
+
+  <Tab title="Security Scanner">
+    Correlate infrastructure or code vulnerability findings with service anomalies:
+
+    ```json
+    {
+      "finding": "Public S3 bucket exposure",
+      "severity": "high",
+      "resource": "s3://prod-checkout-assets",
+      "service": "payments-svc",
+      "cve": "CVE-2026-1234",
+      "remediation": "Enable bucket policy deny-insecure-transport"
+    }
+    ```
+  </Tab>
+
+  <Tab title="Custom Event Schema">
+    Ingest arbitrary platform events:
+
+    ```json
+    {
+      "title": "Database Schema Migration Completed",
+      "detail": "Applied migration 0042_add_payment_tokens_index.sql",
+      "service": "payments-svc",
+      "metadata": {
+        "migrationVersion": "0042",
+        "durationMs": 420
+      }
+    }
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## 4. Running the Plugin Verification Script
+
+The Evolvex repository ships with a multi-plugin test harness:
+
+```bash
+# In the Evolvex repository:
+export PLUGIN_WEBHOOK_SECRET="your-plugin-secret"
+export PLUGIN_ID="prometheus-alertmanager" # or security-scanner, datadog-import
+
+pnpm plugin:webhook-demo
+```
