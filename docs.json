@@ -15,11 +15,108 @@
       }
     ]
   },
+  "banner": {
+    "content": "Evolvex v1.0.0 is live! Autonomous incident investigations on SigNoz with eBPF, K8s, and Git correlation.",
+    "type": "info",
+    "dismissible": true,
+    "id": "evolvex-v1-launch"
+  },
+  "fonts": {
+    "body": {
+      "family": "Inter",
+      "weight": ["400", "500", "600", "700"]
+    },
+    "heading": {
+      "family": "Inter",
+      "weight": ["600", "700", "800"]
+    }
+  },
+  "seo": {
+    "indexing": "navigable"
+  },
+  "analytics": {
+    "enabled": true
+  },
+  "admin": {
+    "enabled": true
+  },
+  "team": {
+    "members": [
+      {
+        "email": "ishaan@evolvex.io",
+        "role": "owner"
+      }
+    ]
+  },
+  "redirects": [
+    {
+      "source": "/docs",
+      "destination": "/quickstart",
+      "permanent": true
+    },
+    {
+      "source": "/install",
+      "destination": "/quickstart",
+      "permanent": true
+    },
+    {
+      "source": "/signoz",
+      "destination": "/guides/signoz-setup",
+      "permanent": true
+    },
+    {
+      "source": "/ebpf",
+      "destination": "/guides/ebpf-obi",
+      "permanent": true
+    }
+  ],
   "navbar": {
     "primary": {
       "label": "Get started",
       "href": "/quickstart"
+    },
+    "links": [
+      {
+        "label": "Console",
+        "href": "http://localhost:3000"
+      },
+      {
+        "label": "SigNoz Cloud",
+        "href": "https://signoz.io"
+      }
+    ]
+  },
+  "tracking": {
+    "repos": [
+      {
+        "owner": "ishaansatapathy",
+        "repo": "EvolveX",
+        "branch": "main",
+        "paths": [
+          "apps/web/**",
+          "apps/worker/**",
+          "packages/sdk/**",
+          "helm/**",
+          "scripts/**"
+        ],
+        "outputTab": "Guides",
+        "outputGroup": "Operations & Automation"
+      }
+    ]
+  },
+  "apiPlayground": {
+    "credentials": {
+      "apiKeyAuth": "evx_live_evaluator_key_secret",
+      "basicAuth": "evolvex-signoz-webhook-token"
     }
+  },
+  "feedback": {
+    "thumbsRating": true
+  },
+  "ai": {
+    "chat": true,
+    "label": "Ask EvolvexAI",
+    "systemPrompt": "You are EvolvexAI, an expert autonomous reliability engineering agent. Assist users with incident investigation workflows, SigNoz OpenTelemetry tracing, eBPF kernel drops, Kubernetes agent deployment, and Evolvex SDK integration."
   },
   "tabs": [
     {
@@ -33,10 +130,37 @@
           ]
         },
         {
-          "group": "Design your docs",
+          "group": "Architecture & Engine",
           "pages": [
-            "components",
-            "customization"
+            "guides/architecture",
+            "guides/ebpf-obi",
+            "guides/signoz-mcp"
+          ]
+        }
+      ]
+    },
+    {
+      "tab": "Integrations",
+      "groups": [
+        {
+          "group": "Telemetry & Clusters",
+          "pages": [
+            "guides/signoz-setup",
+            "guides/kubernetes"
+          ]
+        },
+        {
+          "group": "Collaboration & Git",
+          "pages": [
+            "guides/github-integration",
+            "guides/slack-jira",
+            "guides/cicd-and-flags"
+          ]
+        },
+        {
+          "group": "Extensibility & Plugins",
+          "pages": [
+            "guides/plugins-and-webhooks"
           ]
         }
       ]
@@ -45,11 +169,34 @@
       "tab": "Guides",
       "groups": [
         {
-          "group": "Work with Thally",
+          "group": "Operations & Automation",
           "pages": [
+            "guides/postmortem-and-dashboards",
+            "guides/troubleshooting",
+            "guides/telemetry-intelligence",
+            "guides/work-with-the-cli"
+          ]
+        },
+        {
+          "group": "Developer Tools & SDK",
+          "pages": [
+            "guides/sdk-and-custom-events",
             "guides/create-a-site",
-            "guides/work-with-the-cli",
             "guides/connect-ai-tools"
+          ]
+        },
+        {
+          "group": "Documentation Design",
+          "pages": [
+            "components",
+            "customization"
+          ]
+        },
+        {
+          "group": "System",
+          "hidden": true,
+          "pages": [
+            "404"
           ]
         }
       ]
@@ -74,7 +221,95 @@
       "href": "/changelog"
     }
   ],
-  "ai": {
-    "chat": true
+  "footer": {
+    "socials": {
+      "github": "https://github.com/ishaansatapathy/EvolveX"
+    },
+    "links": [
+      {
+        "heading": "Product",
+        "items": [
+          {
+            "label": "Overview",
+            "href": "/"
+          },
+          {
+            "label": "Quickstart",
+            "href": "/quickstart"
+          },
+          {
+            "label": "System Architecture",
+            "href": "/guides/architecture"
+          },
+          {
+            "label": "Changelog",
+            "href": "/changelog"
+          }
+        ]
+      },
+      {
+        "heading": "Integrations",
+        "items": [
+          {
+            "label": "SigNoz & OpenTelemetry",
+            "href": "/guides/signoz-setup"
+          },
+          {
+            "label": "Kubernetes Cluster",
+            "href": "/guides/kubernetes"
+          },
+          {
+            "label": "Slack & Jira Sync",
+            "href": "/guides/slack-jira"
+          },
+          {
+            "label": "Linux eBPF Kernel",
+            "href": "/guides/ebpf-obi"
+          }
+        ]
+      },
+      {
+        "heading": "Developer Platform",
+        "items": [
+          {
+            "label": "API Overview",
+            "href": "/api/introduction"
+          },
+          {
+            "label": "Interactive Console",
+            "href": "/api/overview"
+          },
+          {
+            "label": "TypeScript SDK",
+            "href": "/guides/sdk-and-custom-events"
+          },
+          {
+            "label": "Model Context Protocol",
+            "href": "/guides/signoz-mcp"
+          }
+        ]
+      },
+      {
+        "heading": "Operations",
+        "items": [
+          {
+            "label": "Postmortems & Dashboards",
+            "href": "/guides/postmortem-and-dashboards"
+          },
+          {
+            "label": "Troubleshooting Matrix",
+            "href": "/guides/troubleshooting"
+          },
+          {
+            "label": "Telemetry Intelligence",
+            "href": "/guides/telemetry-intelligence"
+          },
+          {
+            "label": "Plugin Hub & Webhooks",
+            "href": "/guides/plugins-and-webhooks"
+          }
+        ]
+      }
+    ]
   }
 }
