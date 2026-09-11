@@ -1,0 +1,138 @@
+---
+title: CI/CD Pipelines & Feature Flags
+description: Correlate GitHub Actions, GitLab CI workflows, test retry failures, and LaunchDarkly/Unleash feature flag flips directly with incident spikes.
+keywords:
+  - cicd integration
+  - github actions
+  - gitlab ci
+  - feature flags
+  - launchdarkly
+  - unleash
+  - timeline correlation
+---
+
+High-velocity engineering teams introduce changes continuously. When an incident occurs, answering *"What changed right before the error spike?"* requires correlating CI/CD job outcomes and feature flag toggles alongside telemetry.
+
+Evolvex provides dedicated, multi-tenant webhook receivers for both change sources:
+- **`/webhooks/cicd`**: Captures workflow execution states, test failures, and retry loops.
+- **`/webhooks/feature-flags`**: Captures flag rollouts, percentage changes, and kill-switch activations.
+
+<CicdFlagsFlow />
+
+---
+
+## 1. CI/CD Webhook Integration (`/webhooks/cicd`)
+
+### Step 1: Generate your workspace secret
+1. In Evolvex, navigate to **Settings → Connect signal webhooks → CI/CD**.
+2. Click **Generate secret**.
+3. Copy your unique `x-evolvex-cicd-secret`.
+
+### Step 2: Configure GitHub Actions workflow webhook
+In your repository's GitHub Actions workflow, emit workflow status notifications on failure or completion:
+
+```yaml
+# .github/workflows/deploy.yml
+name: Production Deploy
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  test-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Run Integration Tests
+        id: test
+        run: npm test
+
+      - name: Notify Evolvex on Failure or Deploy
+        if: always()
+        run: |
+          curl -X POST "https://evolvex-api.ishaandev.co.in/webhooks/cicd" \
+            -H "Content-Type: application/json" \
+            -H "x-evolvex-cicd-secret: ${{ secrets.EVOLVEX_CICD_SECRET }}" \
+            -d '{
+              "action": "completed",
+              "repository": { "full_name": "${{ github.repository }}" },
+              "workflow_job": {
+                "name": "${{ github.job }}",
+                "workflow_name": "${{ github.workflow }}",
+                "conclusion": "${{ job.status }}",
+                "status": "completed",
+                "run_attempt": ${{ github.run_attempt }},
+                "html_url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+                "completed_at": "'"$(date -u +%Y-%m-%dT%H:%M:%SZ)"'"
+              }
+            }'
+```
+
+### Step 3: Test with the simulation script
+Simulate a test failure followed by a successful retry:
+
+```bash
+# In the Evolvex repository:
+pnpm cicd:webhook-demo
+```
+
+---
+
+## 2. Feature Flag Webhook Integration (`/webhooks/feature-flags`)
+
+Feature flag toggles frequently trigger latent bugs in production services. Evolvex correlates flag activation timestamps against SigNoz metric thresholds.
+
+### Step 1: Generate your workspace secret
+1. In Evolvex, navigate to **Settings → Connect signal webhooks → Feature Flags**.
+2. Click **Generate secret**.
+3. Copy your unique `x-evolvex-flag-secret`.
+
+### Step 2: Configure LaunchDarkly or Unleash Webhook
+1. In LaunchDarkly, navigate to **Integrations → Webhooks → Add webhook**.
+2. Set the **URL**: `https://evolvex-api.ishaandev.co.in/webhooks/feature-flags`.
+3. Add a custom header:
+   - **Header Name:** `x-evolvex-flag-secret`
+   - **Header Value:** Your unique workspace secret.
+4. Save the integration.
+
+### Payload Schema:
+```json
+{
+  "kind": "flag",
+  "action": "update",
+  "title": "Turned on flag New Checkout",
+  "target": {
+    "key": "new-checkout",
+    "name": "New Checkout",
+    "tags": ["service:payments-svc"]
+  },
+  "member": {
+    "email": "lead-engineer@company.com"
+  },
+  "date": "2026-09-11T01:30:00Z"
+}
+```
+
+### Step 3: Test with the simulation script
+Trigger an immediate flag toggle simulation:
+
+```bash
+# In the Evolvex repository:
+pnpm feature-flag:webhook-demo
+```
+
+---
+
+## 3. Timeline Representation
+
+When an alert fires on `payments-svc`, Evolvex inspects changes occurring within a 30-minute window before the alert:
+
+```text
+[ALERT]  01:32:00 — SigNoz alert fired: p99 latency > 800ms
+[CHANGE] 01:30:00 — Feature Flag: Turned on flag New Checkout (by lead-engineer@company.com)
+[DEPLOY] 01:25:00 — CI/CD: Production Deploy completed on acme/payments-svc (Run #123)
+```
+
+The AI synthesis engine highlights the flag update as a primary candidate cause when error traces correlate with the targeted code branch.
