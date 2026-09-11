@@ -316,13 +316,13 @@ export function EvolvexLanding() {
                 href="https://github.com/thallylabs/thally"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] hover:border-white/25 transition-all"
+                className="group flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] hover:border-white/25 transition-all whitespace-nowrap shrink-0"
               >
                 <span className="size-1.5 rounded-full bg-[#ef4444] animate-pulse" />
-                <span className="text-[10px] font-mono text-white/60 group-hover:text-white">
+                <span className="text-[10px] font-mono text-white/60 group-hover:text-white whitespace-nowrap">
                   Built on <strong className="text-white font-semibold">Thally</strong>
                 </span>
-                <ExternalLink className="size-2.5 text-white/40 group-hover:text-white transition-colors" />
+                <ExternalLink className="size-2.5 text-white/40 group-hover:text-white transition-colors shrink-0" />
               </a>
             </div>
           </div>
