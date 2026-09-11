@@ -969,12 +969,6 @@ export function EvolvexLanding() {
                 Thally Documentation Runtime
               </a>
             </p>
-            <div className="flex items-center gap-3">
-              <span className="text-[10px] font-mono text-white/30 tracking-wider">
-                Thally v0.2.4 · Next.js · OpenTelemetry
-              </span>
-              <div className="h-[1px] w-12 bg-[#ef4444]/40" />
-            </div>
           </div>
         </div>
       </footer>
