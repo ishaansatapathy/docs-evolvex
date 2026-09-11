@@ -1,0 +1,91 @@
+---
+title: Slack & Jira Integration
+description: Connect Slack for automated incident readiness notifications and Jira for one-click issue creation from investigation timelines.
+keywords:
+  - slack integration
+  - jira integration
+  - incident notifications
+  - atlassian api token
+  - create jira issue
+  - slack incoming webhook
+---
+
+Evolvex connects directly with your team's existing collaboration tools. Slack broadcasts automated updates when investigations are enriched or resolved, while Jira enables engineers to create tracked bug tickets directly from an incident's causal timeline.
+
+Neither Slack nor Jira creates incident cases—they act as **outbound operational channels**.
+
+---
+
+## 1. Slack integration (Incident notifications)
+
+Slack notifies your engineering channel when:
+- A new investigation finishes building and evidence is ready.
+- An incident transitions to `resolved`.
+- High-severity anomaly signals are detected.
+
+### Option A: "Add to Slack" OAuth (One-Click)
+1. In Evolvex, navigate to **Settings → Connect integrations → Slack**.
+2. Click **Add to Slack**.
+3. Choose your workspace and target channel (e.g. `#oncall-incidents`).
+4. Click **Allow**.
+5. Click **Send test message** to verify delivery.
+
+### Option B: Manual incoming webhook
+If your Slack administrator restricts OAuth apps, use an incoming webhook:
+
+1. In Slack, go to **Apps → Incoming Webhooks → Add to Slack**.
+2. Select your channel and copy the Webhook URL (format: `https://hooks.slack.com/services/T.../B.../X...`).
+3. In Evolvex, go to **Settings → Slack → Manual setup**.
+4. Paste the Webhook URL and click **Save Webhook URL**.
+5. Click **Send test message**.
+
+Verify via curl:
+```bash
+curl -X POST "<your-slack-incoming-webhook-url>" \
+  -H "Content-Type: application/json" \
+  -d '{"text":"Evolvex connectivity verification message"}'
+```
+
+---
+
+## 2. Jira integration (One-click ticket creation)
+
+Engineers can convert any active or resolved investigation into a Jira issue with pre-filled context, citations, and causal diffs.
+
+### Step 1: Generate an Atlassian API token
+1. Open [Atlassian API Tokens](https://id.atlassian.com/manage-profile/security/api-tokens).
+2. Click **Create API token**.
+3. Label it `Evolvex-Jira` and copy the generated token (`ATATT...`).
+
+### Step 2: Configure Jira in Evolvex Settings
+Navigate to **Settings → Connect integrations → Jira**:
+
+```text
+Base URL:     https://your-org.atlassian.net
+Email:        you@company.com          # must match your Atlassian login
+API Token:    ATATT3xFfGF0...          # paste token once
+Project Key:  SCRUM                    # board project key from Jira URL
+Issue Type:   Bug                      # or Task (must exist in project)
+```
+
+1. Click **Save Jira**.
+2. Click **Test Jira** → Expect `Connected as <name> · project SCRUM · issue type Bug`.
+
+### Step 3: Create an issue from an investigation
+1. Open any investigation case in Evolvex.
+2. In the top action bar, click **Create Jira issue**.
+3. Evolvex creates the ticket in Jira and logs the action on the timeline with an audit entry.
+
+### Example auto-generated ticket body
+```markdown
+## Incident Summary
+p99 latency spike (1,240ms) on service payments-svc
+
+## AI Root Cause
+Redis connection pool exhaustion in `src/checkout.ts:42` introduced in commit `fc35fd4`.
+
+## Evidence Timeline
+- [T1] SigNoz alert fired: p99 latency > 800ms
+- [T2] Deploy commit fc35fd4 by Ishaan Satapathy
+- [T3] Error trace 8fa12b9c duration 1,240ms: Connection pool timeout
+```
