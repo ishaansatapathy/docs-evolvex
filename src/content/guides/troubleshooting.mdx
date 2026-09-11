@@ -1,0 +1,125 @@
+---
+title: Troubleshooting Guide
+description: Diagnostic matrix and step-by-step resolution paths for webhook routing, eBPF permissions, SigNoz API access, and database connection limits.
+keywords:
+  - troubleshooting
+  - debug signoz
+  - ebpf permissions
+  - webhook errors
+  - neon postgres
+  - otel dropped spans
+  - authz forbidden
+---
+
+This guide covers common operational challenges encountered when connecting OpenTelemetry, SigNoz, eBPF probes, and external webhooks to Evolvex.
+
+## Quick diagnostic matrix
+
+| Symptom | Probable Cause | Immediate Resolution |
+| :--- | :--- | :--- |
+| **No investigations created** | Webhook password missing or alert rule unattached | Verify Basic Auth password in SigNoz channel matches **Settings → Generate webhook credentials**. Ensure rule notification points to this channel. |
+| **Case routed to wrong workspace** | Shared or default webhook password | Each workspace requires its own generated password. Update the SigNoz Notification Channel with your workspace credential. |
+| **SigNoz save fails with HTTP 500** | Missing encryption key on operator deployment | Ensure `INTEGRATION_SECRETS_KEY` is configured and database migrations (`pnpm db:migrate`) have been applied. |
+| **`403 authz_forbidden` on alert or dashboard creation** | SigNoz API key has `Viewer` permissions | Generate a new API key in SigNoz with **Editor** or **Admin** role. Read-only keys cannot mutate alert rules or dashboards. |
+| **Traces page empty in Evolvex** | OTel exporter headers missing ingestion key | Ensure application shell exports `signoz-ingestion-key` in OTLP headers and endpoint URL has no trailing slash. |
+| **eBPF signals not appearing** | Host kernel lacks BTF or container unprivileged | Confirm Linux kernel version `5.8+` with BTF enabled. OBI requires privileged execution (`CAP_SYS_ADMIN` / `CAP_BPF`). |
+| **GitHub deploy timeline missing** | Push occurred before investigation opened | Commit and push events must fall within the incident's temporal window (15 minutes prior to alert firing). |
+| **Pinpoint culprit empty** | Stack trace absent from SigNoz error logs | Pinpoint parses `file:line` references from runtime stack traces. Ensure application logs exception objects rather than plain strings. |
+
+---
+
+## Detailed resolution paths
+
+<AccordionGroup>
+  <Accordion title="1. Webhook routing & multi-tenant password mismatches">
+    Evolvex uses an indexed SHA-256 hash lookup (`secret_hash`) on inbound webhook passwords to achieve $O(1)$ tenant resolution without decrypting database rows.
+
+    ### Verification steps
+    1. Open **Settings → Connect SigNoz** in your Evolvex workspace.
+    2. Click **Generate webhook credentials** and copy the generated password.
+    3. In SigNoz, open **Alerts → Notification Channels** and edit your webhook channel.
+    4. Ensure the **Username** is `evolvex` and paste the password into the **Password** field.
+    5. In the alert rule definition, ensure the channel is selected under **Notification**.
+
+    <Warning>
+      Do not rely on the legacy environment variables `SIGNOZ_WEBHOOK_SECRET` or `INVESTIGATION_OWNER_EMAIL`. In multi-tenant environments, a workspace's vault secret takes precedence over environment fallbacks.
+    </Warning>
+  </Accordion>
+
+  <Accordion title="2. OpenTelemetry eBPF Instrumentation (OBI) kernel requirements">
+    OBI operates at the Linux socket layer to capture TCP round-trip times and socket drops. It does not run on native Windows or macOS.
+
+    ### Prerequisites
+    - **Kernel:** Linux 5.8+ with BTF (`CONFIG_DEBUG_INFO_BTF=y`).
+    - **Privileges:** The container must run with `--privileged` or with capabilities `CAP_SYS_ADMIN`, `CAP_BPF`, and `CAP_PERFMON`.
+    - **Docker Desktop (Windows/macOS):** Must use the WSL2 Linux engine with host namespace access.
+
+    ### Verifying BTF support
+    Run the following command inside your Linux host:
+
+    ```bash
+    ls -la /sys/kernel/btf/vmlinux
+    ```
+
+    If this file is missing, your kernel does not support modern CO-RE eBPF execution. Use SigNoz metrics fallback mode instead.
+  </Accordion>
+
+  <Accordion title="3. SigNoz API permissions (403 Forbidden)">
+    SigNoz segregates permissions across Viewer, Editor, and Admin roles:
+
+    - **Listing services / searching traces:** Allowed for all roles.
+    - **Creating alert rules (`/api/v2/rules`):** Requires **Editor** or **Admin**.
+    - **Creating dashboards (`/api/v1/dashboards`):** Requires **Editor** or **Admin**.
+
+    If `pnpm signoz:alert-setup` or the **"Create SigNoz dashboard"** button fails with `403 authz_forbidden`:
+    1. Navigate to SigNoz UI → **Settings → API Keys**.
+    2. Revoke the existing key and generate a new key with **Admin** permissions.
+    3. Update the key in Evolvex **Settings → SigNoz**.
+  </Accordion>
+
+  <Accordion title="4. OpenTelemetry dropped spans & collector timeouts">
+    Common reasons traces fail to appear in SigNoz and Evolvex:
+
+    1. **Malformed Ingestion URL:**
+       Ensure `SIGNOZ_INGESTION_URL` contains no trailing slashes:
+       ```bash
+       # Correct
+       SIGNOZ_INGESTION_URL="https://ingest.in2.signoz.cloud"
+
+       # Incorrect (causes 404 on /v1/traces)
+       SIGNOZ_INGESTION_URL="https://ingest.in2.signoz.cloud/"
+       ```
+
+    2. **Missing Ingestion Header:**
+       Verify your OTLP exporter includes the exact header `signoz-ingestion-key`:
+       ```typescript
+       headers: { "signoz-ingestion-key": process.env.SIGNOZ_INGESTION_KEY }
+       ```
+
+    3. **Process Exited Before Flush:**
+       For short-lived scripts or CLI tools, invoke `sdk.shutdown()` before exiting so buffered spans are transmitted.
+  </Accordion>
+
+  <Accordion title="5. Neon PostgreSQL connection pooling">
+    Evolvex utilizes Neon Serverless PostgreSQL with auto-scaling connection pooling:
+
+    - **Application Runtime (`DATABASE_URL`):** Must use the pooled connection string (hostname contains `-pooler`).
+    - **Schema Migrations (`DATABASE_URL_UNPOOLED`):** Must use the direct unpooled connection string, as migration scripts use transactional advisory locks unsupported by connection poolers.
+
+    ```bash
+    # Pooled connection for high concurrency API routes
+    DATABASE_URL="postgresql://user:pass@ep-silent-pooler.neon.tech/evolvex?sslmode=require"
+
+    # Direct connection for pnpm db:migrate
+    DATABASE_URL_UNPOOLED="postgresql://user:pass@ep-silent.neon.tech/evolvex?sslmode=require"
+    ```
+  </Accordion>
+
+  <Accordion title="6. GitHub deploy correlation & pinpoint requirements">
+    To enable the automated pinpoint engine (`file:line` identification):
+
+    1. **GitHub PAT Scopes:** Personal Access Tokens require `repo` (for private repositories) or `public_repo` read permissions.
+    2. **Repository Matching:** The repository configured in **Settings → GitHub** must match the `owner/repo` string in your git commits.
+    3. **Real Stack Traces:** The pinpoint algorithm searches SigNoz error logs for standard stack traces (e.g. `at Object.<anonymous> (/app/src/checkout.ts:42:15)`). Ensure your application does not catch and swallow error stack objects.
+  </Accordion>
+</AccordionGroup>
