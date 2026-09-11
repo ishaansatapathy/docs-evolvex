@@ -1,0 +1,112 @@
+---
+title: System Architecture
+description: Architectural design, multi-tenant isolation model, zero-fake-data policy, and the 6-stage investigation pipeline.
+keywords:
+  - architecture
+  - causal graph
+  - multi-tenant vault
+  - secret hash
+  - zero fake data
+  - signoz data plane
+  - investigation os
+lastUpdated: "2026-09-10"
+lastVerified: "2026-09-10"
+verifiedVersion: "v1.0.0"
+---
+
+Evolvex is the **investigation operating system** built on top of SigNoz. While SigNoz and OpenTelemetry serve as the real-time telemetry data plane, PostgreSQL acts as the immutable investigation database where alerts, traces, logs, deploys, Kubernetes events, and kernel signals are synthesized into verified incident timelines.
+
+<ArchitectureFlow />
+
+## Monorepo codebase structure
+
+Evolvex is organized as a high-performance monorepo separating customer web interface, background correlation workers, Kubernetes agents, and published client libraries:
+
+<Tree>
+  <Folder name="evolvex" defaultOpen>
+    <Folder name="apps" defaultOpen>
+      <Folder name="web" defaultOpen>
+        <File name="next.config.js" />
+        <File name="package.json" />
+        <Folder name="src">
+          <File name="app/page.tsx" />
+          <File name="components/investigation-detail.tsx" />
+        </Folder>
+      </Folder>
+      <Folder name="worker">
+        <File name="package.json" />
+        <Folder name="src">
+          <File name="pipeline.ts" />
+          <File name="signoz-client.ts" />
+        </Folder>
+      </Folder>
+    </Folder>
+    <Folder name="packages" defaultOpen>
+      <Folder name="sdk">
+        <File name="src/client.ts" />
+        <File name="package.json" />
+      </Folder>
+    </Folder>
+    <Folder name="helm">
+      <Folder name="evolvex-agent">
+        <File name="Chart.yaml" />
+        <File name="values.yaml" />
+      </Folder>
+    </Folder>
+  </Folder>
+</Tree>
+
+## The zero-fake-data policy
+
+Evolvex enforces an absolute policy: **zero synthetic or fabricated data in production**.
+
+- **No mock traces or logs:** All telemetry queries hit SigNoz's Query API v5 (`/api/v5/query_range`) and <Tooltip tip="High-performance columnar database powering SigNoz logs and trace storage.">ClickHouse</Tooltip> storage directly.
+- **No hardcoded eBPF strings:** Kernel signals are only added to an investigation timeline when real <Tooltip tip="OpenTelemetry eBPF Instrumentation: captures kernel TCP drops and latency probes.">eBPF OBI</Tooltip> metrics (`obi_stat_tcp_rtt_seconds`) or direct kernel webhooks are received.
+- **No ungrounded AI summaries:** The LLM does not hallucinate causes. It is supplied strictly with the assembled evidence bundle and must output clickable markdown citations (`[T1]`, `[E1]`) verifying each statement.
+
+## Multi-tenant isolation model
+
+Every customer environment is isolated into an `organizations` partition. Evolvex implements a dual-tier isolation mechanism tailored to the integration pattern:
+
+| Integration Category | Isolation Mechanism | Operational Characteristic |
+| :--- | :--- | :--- |
+| **Outbound Integrations** (SigNoz API, GitHub, Jira, Slack) | AES-256-GCM envelope encryption in `organization_integrations` | Encrypted at rest using `INTEGRATION_SECRETS_KEY`. Decrypted in memory only when executing API calls scoped to that `organizationId`. |
+| **Inbound Webhooks** (SigNoz Alerts, K8s, eBPF, CI/CD) | Per-workspace secret + indexed SHA-256 `secret_hash` | Resolves the owning organization in $O(1)$ time without scanning or decrypting every database row. Supports a 24-hour dual-secret rotation grace period. |
+| **Single-Tenant / Local Dev** | Environment variable fallback (`SIGNOZ_WEBHOOK_SECRET`) | Active only when no organization vault configuration is present. |
+
+## The 6-stage investigation pipeline
+
+When an incident occurs, Evolvex executes an asynchronous, non-blocking pipeline:
+
+<Steps>
+  <Step title="Alert Ingestion">
+    SigNoz fires an alert webhook to `POST /webhooks/signoz`. Evolvex authenticates the workspace password via `secret_hash`, opens an `investigations` row in PostgreSQL, and establishes the initial temporal window (alert timestamp $\pm 15$ minutes).
+  </Step>
+
+  <Step title="Evidence Enrichment">
+    The pipeline queries SigNoz via Query API v5 for slow traces, error spans, and log spikes matching the affected service. Results are cached with a SHA-256 fingerprint in `investigation_pipeline_cache` with a 24-hour TTL to prevent redundant database load.
+  </Step>
+
+  <Step title="Change Correlation">
+    The engine checks git commits, deploy webhooks, Kubernetes pod events (OOMKilled, rollouts), and feature flag toggles that occurred within the incident window.
+  </Step>
+
+  <Step title="Service Graph Synthesis">
+    Evolvex queries the SigNoz Service Map API to build a live dependency DAG, tracing upstream callers and downstream databases without synthetic topological assumptions.
+  </Step>
+
+  <Step title="Evidence-First LLM Synthesis">
+    The assembled evidence package is processed by OpenAI to generate a concise incident narrative. Every assertion includes a verified citation tag linking directly to the corresponding timeline entry.
+  </Step>
+
+  <Step title="Remediation & Export Actions">
+    Engineers can generate a scoped SigNoz dashboard with one click (`POST /api/v1/dashboards`), create a tracked Jira issue, page the team on PagerDuty, or export a formatted markdown postmortem.
+  </Step>
+</Steps>
+
+## Security architecture
+
+- **CSRF & Origin Verification:** State-changing requests enforce `requireTrustedOrigin` and require the `x-evolvex-csrf` header on authenticated routes.
+- **HMAC Signatures:** GitHub webhooks are validated using HMAC-SHA256 with constant-time buffer comparison.
+- **Distributed Rate Limiting:** Redis-backed sliding window limiters protect webhook endpoints against alert floods, with in-process fallbacks for single-node deployments.
+- **Audit Logging:** Every privileged action (credential rotation, dashboard generation, ticket creation) writes an immutable `audit_events` row.
