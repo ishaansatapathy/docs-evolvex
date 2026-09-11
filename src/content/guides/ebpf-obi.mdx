@@ -1,0 +1,108 @@
+---
+title: eBPF & Kernel Observability (OBI)
+description: Zero-code kernel observability using OpenTelemetry eBPF Instrumentation (OBI) to capture TCP socket latency and packet drops.
+keywords:
+  - ebpf
+  - obi
+  - opentelemetry ebpf
+  - tcp retransmits
+  - kernel observability
+  - beyla
+  - socket drops
+---
+
+[OBI](https://github.com/open-telemetry/opentelemetry-ebpf-instrumentation) (OpenTelemetry eBPF Instrumentation) provides **zero-overhead, zero-code auto-instrumentation** at the Linux kernel boundary. It captures HTTP/gRPC RED metrics, distributed traces, and low-level network signals (TCP round-trip time, socket drops, SYN retransmissions) without requiring SDK dependencies or application restarts.
+
+Evolvex integrates OBI strictly through **real kernel telemetry**—never synthetic or mocked data.
+
+<EbpfObiFlow />
+
+## Two ingestion pathways
+
+| Pathway | Mechanism | When to use |
+| :--- | :--- | :--- |
+| **A. SigNoz OTLP Metrics** (Recommended) | OBI exports metrics directly to your SigNoz endpoint. | Evolvex queries OBI metric names during the async evidence enrichment pipeline (`enrichEbpfFromSignozMetrics`). |
+| **B. OBI Anomaly Bridge** | `pnpm obi:bridge` monitors SigNoz metrics and POSTs spikes to `/webhooks/ebpf`. | For live demonstrations where you want immediate webhook-driven timeline entries without waiting for alert evaluations. |
+
+## Key kernel metrics captured
+
+- `obi_stat_tcp_rtt_seconds` — Kernel TCP round-trip latency measured from socket acknowledge packets.
+- `obi_network_flow_bytes_total` — Inbound and outbound network bandwidth per container socket.
+- `http_server_request_duration_seconds` — Golden signal request duration extracted at kernel socket ingress before userspace runtime overhead.
+
+## Local Docker Compose demonstration
+
+The Evolvex repository includes a turnkey eBPF test stack in `docker-compose.obi.yml`.
+
+### 1. Prerequisites
+- Linux host or Docker Desktop with WSL2 (Windows 10/11)
+- Linux kernel 5.8+ with BTF enabled (`CONFIG_DEBUG_INFO_BTF=y`)
+- Valid `SIGNOZ_INGESTION_URL` and `SIGNOZ_INGESTION_KEY` in your `.env`
+
+### 2. Start the eBPF stack
+```bash
+docker compose -f docker-compose.obi.yml up
+```
+
+This starts:
+1. `goblog` — A real sample HTTPS application running on port 8443.
+2. `obi` — The privileged eBPF agent instrumenting port 8443 and exporting OTLP metrics to your SigNoz instance.
+
+### 3. Generate traffic & observe kernel signals
+Navigate to `https://localhost:18443` in your browser. Open your SigNoz Cloud or local dashboard to verify incoming `obi_stat_*` metrics.
+
+### 4. Running the anomaly bridge (Optional)
+To test threshold triggers against your running service:
+
+```bash
+# Evaluate once against service goblog
+pnpm obi:bridge -- --service goblog --once
+
+# Run continuous polling every 60 seconds
+pnpm obi:bridge -- --service payments-svc
+```
+
+Configuration variables for the bridge:
+```bash
+EBPF_WEBHOOK_SECRET=your-workspace-secret
+OBI_TCP_RTT_THRESHOLD_SEC=0.250     # Trigger when TCP RTT exceeds 250ms
+OBI_HTTP_LATENCY_THRESHOLD_SEC=0.80 # Trigger when HTTP latency exceeds 800ms
+```
+
+## Production Kubernetes deployment
+
+Deploy OBI as a `DaemonSet` across your Kubernetes worker nodes to observe all pods automatically:
+
+```yaml
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: opentelemetry-ebpf
+  namespace: opentelemetry
+spec:
+  selector:
+    matchLabels:
+      app: opentelemetry-ebpf
+  template:
+    metadata:
+      labels:
+        app: opentelemetry-ebpf
+    spec:
+      hostPID: true
+      containers:
+        - name: obi
+          image: otel/ebpf-instrument:v0.10.0
+          securityContext:
+            privileged: true
+          env:
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: "https://ingest.in2.signoz.cloud"
+            - name: OTEL_EXPORTER_OTLP_HEADERS
+              value: "signoz-ingestion-key=$(SIGNOZ_INGESTION_KEY)"
+            - name: OTEL_EBPF_METRICS_FEATURES
+              value: "network,application"
+```
+
+<Note>
+  OBI runs as a native Linux kernel daemon, not a Node.js library. Evolvex stays cleanly decoupled as an investigation layer, querying OBI telemetry through SigNoz. This guarantees zero impact on your application runtime performance.
+</Note>
