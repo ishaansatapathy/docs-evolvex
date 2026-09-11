@@ -1,86 +1,106 @@
-# Thally Starter
+# Evolvex Documentation Platform
 
-A production-ready documentation site built with the open-source Thally runtime.
-Use this repository as a GitHub template or clone it directly, then replace the
-starter content with documentation for your product.
+[![Thally Hackathon Track 2](https://img.shields.io/badge/Thally%20Hackathon-Track%202%3A%20Launch%20or%20Migrate-ff3344.svg)](https://thally.io)
+[![Agent Readiness](https://img.shields.io/badge/Agent%20Readiness-100%2F100%20(Grade%20A)-00ff88.svg)](http://localhost:3040/api/agent-readiness)
+[![OpenAPI](https://img.shields.io/badge/OpenAPI-3.1.0-blue.svg)](http://localhost:3040/openapi.yaml)
+[![SigNoz](https://img.shields.io/badge/Data%20Plane-SigNoz%20OTel-orange.svg)](https://signoz.io)
 
-Thally is the product knowledge layer for software teams. This starter is its
-portable publishing foundation: your content stays in Git, and the same source
-can serve people, search engines, and AI tools.
+> Production-grade, AI-native documentation platform for **Evolvex (Autonomous Incident Investigation OS on SigNoz)**, built on the **Thally documentation runtime** for **Hackathon Track 2: Launch or Migrate**.
 
-This is the canonical complete template consumed by Thally Cloud, the CLI, and
-the MCP server. Runtime code is authored once in
-[`thallylabs/thally`](https://github.com/thallylabs/thally), then generated into
-this repository as a pinned, byte-identical snapshot. Do not manually repeat a
-runtime fix in both repositories.
+---
 
-This README covers the portable starter, not the full managed platform. The
-sole production architecture authority is
-[`thally-cloud/ARCHITECTURE.md`](https://github.com/thallylabs/thally-cloud/blob/main/ARCHITECTURE.md),
-available to maintainers with access to the private repository. The CLI, MCP,
-and Cloud creation flows consume an exact promoted scaffold release rather
-than treating the mutable `main` branch as a release identity.
+## 🌟 Overview
 
-## Run locally
+Evolvex is an autonomous incident investigation operating system that turns alert noise into verified root-cause timelines. It correlates OpenTelemetry distributed traces, structured logs, Linux eBPF/OBI kernel socket anomalies, Kubernetes pod lifecycles, and CI/CD git deployments with zero fake data.
+
+This repository powers the complete documentation platform, including:
+- **Interactive OpenAPI 3.1.0 Playground:** Full specification covering all inbound webhooks, investigation APIs, SDK endpoints, and Model Context Protocol (MCP).
+- **23 Authored MDX Guides:** Deep-dive integration tutorials with real code for Node.js, Python, Go, Kubernetes Helm, Slack OAuth, Jira, and GitHub.
+- **AI-Native Discovery Engine:** High-performance `/llms.txt`, `/llms-full.txt`, JSON-LD schemas, and remote MCP endpoints.
+- **Obsidian & Crimson Brand Aesthetics:** Bespoke dark theme (`#040704` obsidian surface, `#FF3344` vibrant crimson accent) matching Evolvex's 3D metallic folded X emblem.
+
+---
+
+## 🚀 Quick Start
+
+### 1. Run Locally
 
 ```bash
+# Install dependencies
 npm install
+
+# Start development server on port 3040
 npm run dev
 ```
 
-Open [http://localhost:3040](http://localhost:3040). The next available port is
-used automatically when 3040 is occupied.
+Open [http://localhost:3040](http://localhost:3040) in your browser.
 
-## Make it yours
-
-- Edit pages in `src/content/`.
-- Organize navigation and features in `docs.json`.
-- Set the product name, links, and versioned brand defaults in `src/data/site.ts`.
-- Replace `openapi.yaml` with your API specification.
-- Add logos or favicons in `public/` and reference them from your site settings.
-
-`starter-release.json` records the immutable starter and runtime version used
-to create the site. Keep it in the repository so `thally starter update` can
-plan framework updates without overwriting your content or portable settings.
-
-`thally starter update` performs a three-way comparison between the recorded
-previous scaffold, the promoted target scaffold, and your current project. It
-updates unchanged framework-owned files, preserves user-owned files, and stops
-for manual review when those contracts overlap. The command is a dry run until
-you pass `--apply`.
-
-Maintainers update the generated runtime snapshot through the **Sync Thally
-runtime** workflow. CI rejects a changed pin without matching files, changed
-files without a matching pin, missing files, and stale runtime files.
-
-Content icons are neutral by default. Set `appearance.contentIcons` to `accent`
-in `docs.json`, or add `iconColor="accent"` to an individual card or tile.
-Public page URLs ending in `.md` are disabled by default; enable them explicitly
-with `markdown.enabled` when that distribution surface fits your access model.
-
-## Validate changes
+### 2. Verify Agent Readiness & Tests
 
 ```bash
-npm test
-npm run build
-npm ci --ignore-scripts --prefix .github/thally-tooling
-.github/thally-tooling/node_modules/.bin/thally check --ci .
+# Compile and embed runtime sources
+npm run runtime-sources:build
+
+# Verify 100/100 Agent Readiness Score
+npm run check:agents
+
+# Run static routes test suite
+npx vitest run src/lib/__tests__/doc-route-static-params.test.ts
 ```
 
-## Deploy
+---
 
-The site is a standard Next.js application. Deploy it through Thally Cloud or
-any compatible Next.js host. Cloudflare Workers configuration is included in
-`open-next.config.ts` and `wrangler.jsonc`.
+## 🗺️ Documentation Architecture
 
-Thally Cloud publishes an immutable managed site release and activates it by
-moving the site's production pointer only after validation. Direct hosts use
-their own release and rollback mechanisms; publishing a package or synchronizing
-this starter does not move an existing site's pointer.
+```
+Documentation Navigation:
+├── Get started
+│   ├── Introduction (/introduction)
+│   ├── Quickstart (5-minute setup workflow) (/quickstart)
+│   ├── Architecture & Zero-Fake-Data Policy (/guides/architecture)
+│   ├── Linux eBPF & Kernel OBI Socket Probes (/guides/ebpf-obi)
+│   └── SigNoz Native MCP Server (/guides/signoz-mcp)
+├── Integrations
+│   ├── Telemetry & Clusters:
+│   │   ├── SigNoz & OpenTelemetry Setup (/guides/signoz-setup)
+│   │   └── Kubernetes Cluster Integration (/guides/kubernetes)
+│   ├── Collaboration & Git:
+│   │   ├── GitHub Deploy Correlation & Pinpointing (/guides/github-integration)
+│   │   ├── Slack & Jira Integration (/guides/slack-jira)
+│   │   └── CI/CD Pipelines & Feature Flags (/guides/cicd-and-flags)
+│   └── Extensibility & Plugins:
+│       └── Extensible Webhook Plugins (/guides/plugins-and-webhooks)
+├── Guides
+│   ├── Operations & Automation:
+│   │   ├── Automated Postmortems & SigNoz Dashboards (/guides/postmortem-and-dashboards)
+│   │   ├── Troubleshooting Diagnostic Matrix (/guides/troubleshooting)
+│   │   ├── Telemetry Intelligence & Go Processor (/guides/telemetry-intelligence)
+│   │   └── Work with the CLI (/guides/work-with-the-cli)
+│   └── Developer Tools & SDK:
+│       ├── TypeScript SDK & Custom Events (/guides/sdk-and-custom-events)
+│       ├── Create a Site (/guides/create-a-site)
+│       └── Connect AI Tools (/guides/connect-ai-tools)
+├── API Reference
+│   ├── Overview & Authentication (/api/introduction, /api/authentication)
+│   └── Interactive OpenAPI 3.1.0 Operations Console
+└── Changelog (/changelog)
+```
 
-Copy `.env.example` to `.env.local` only when you need optional services. Never
-commit real credentials.
+---
 
-## License
+## 🤖 AI & Machine Readability Endpoints
 
-[MIT](LICENSE)
+Every page on this site supports multi-format content negotiation:
+- **Markdown Mirror:** Append `.md` to any URL or send `Accept: text/markdown`.
+- **JSON Projection:** Append `?format=json` or send `Accept: application/json`.
+- **JSON-LD Schema:** Append `?format=ldjson` or send `Accept: application/ld+json`.
+- **Full LLM Digest:** [`/llms.txt`](http://localhost:3040/llms.txt) and [`/llms-full.txt`](http://localhost:3040/llms-full.txt).
+- **Model Context Protocol (MCP):** Remote MCP server at [`/.well-known/mcp.json`](http://localhost:3040/.well-known/mcp.json).
+
+---
+
+## 🏆 Hackathon Track 2 Documentation
+
+For judging criteria alignment, architecture overhaul details, and verification proof, review:
+- **Submission Reflection:** [`REFLECTION.md`](./REFLECTION.md)
+- **Visual Walkthrough:** [`walkthrough.md`](./walkthrough.md)
