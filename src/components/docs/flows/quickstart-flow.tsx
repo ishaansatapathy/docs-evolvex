@@ -76,6 +76,7 @@ export function QuickstartFlow() {
             badge="OTLP :4318"
             badgeColor="#6b93b8"
             accentColor="#6b93b8"
+            roughType="underline"
             icon={Cpu}
             seed={111}
             isActive={activeCard === 'app'}
@@ -128,7 +129,7 @@ export function QuickstartFlow() {
             <span className="font-mono text-[10px] text-muted-foreground/50 uppercase tracking-widest">
               Telemetry Store & Alerting
             </span>
-            <StickyNote text="ClickHouse OLAP" />
+            <StickyNote text="ClickHouse OLAP" color="#c2716b" />
           </div>
 
           <ExcalidrawCard
@@ -139,6 +140,7 @@ export function QuickstartFlow() {
             badge="Alert Triggered"
             badgeColor="#c2716b"
             accentColor="#c2716b"
+            roughType="box"
             icon={Flame}
             seed={222}
             isActive={activeCard === 'signoz'}
@@ -192,7 +194,7 @@ export function QuickstartFlow() {
             <span className="font-mono text-[10px] text-muted-foreground/50 uppercase tracking-widest">
               Investigation Engine
             </span>
-            <StickyNote text="O(1) ingestion · multi-tenant" />
+            <StickyNote text="O(1) ingestion · multi-tenant" color="#6b9e6b" />
           </div>
 
           <ExcalidrawCard
@@ -203,6 +205,7 @@ export function QuickstartFlow() {
             badge="Incident Case"
             badgeColor="#6b9e6b"
             accentColor="#6b9e6b"
+            roughType="circle"
             icon={ShieldAlert}
             seed={333}
             isActive={activeCard === 'evolvex'}
@@ -276,6 +279,7 @@ export function QuickstartFlow() {
             badge="API_KEY"
             badgeColor="#6b93b8"
             accentColor="#6b93b8"
+            roughType="underline"
             icon={Database}
             seed={444}
             isActive={activeCard === 'signoz-api'}
@@ -299,6 +303,7 @@ export function QuickstartFlow() {
             badge="GITHUB_TOKEN"
             badgeColor="#9b7db8"
             accentColor="#9b7db8"
+            roughType="underline"
             icon={GitPullRequest}
             seed={555}
             isActive={activeCard === 'github-api'}
@@ -322,6 +327,7 @@ export function QuickstartFlow() {
             badge="Automated RCA"
             badgeColor="#b89b6b"
             accentColor="#b89b6b"
+            roughType="underline"
             icon={Bell}
             seed={666}
             isActive={activeCard === 'slack-jira'}
