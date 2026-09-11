@@ -1,0 +1,11 @@
+<Tip>
+### The three SigNoz credentials
+
+To avoid authentication confusion, keep these three credentials separate:
+
+| Key | Where it belongs | Purpose |
+| :--- | :--- | :--- |
+| **Ingestion key** | Application runtime (`SIGNOZ_INGESTION_KEY`) | Authenticates OTLP traces, logs, and metrics sent **to** SigNoz. |
+| **API key** | Evolvex Settings → SigNoz | Grants Evolvex permission to **read** traces, logs, and metrics via Query API v5. Requires **Editor** or **Admin** role. |
+| **Webhook password** | SigNoz Notification Channel (Basic Auth) | Authenticates inbound alerts and routes them to your isolated tenant workspace in O(1). |
+</Tip>
