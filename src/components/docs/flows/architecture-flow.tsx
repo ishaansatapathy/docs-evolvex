@@ -28,10 +28,10 @@ const INGESTION_SOURCES = [
     title: 'SigNoz Telemetry',
     subtitle: 'Alerts, traces & logs',
     icon: Flame,
-    color: '#F43F5E',
+    color: '#c2716b',
     badge: 'Query API v5',
     endpoint: 'POST /webhooks/signoz',
-    auth: 'Basic Auth (Webhook Password)',
+    auth: 'Basic Auth',
     desc: 'Alert notifications and live ClickHouse trace waterfall queries.',
   },
   {
@@ -39,55 +39,55 @@ const INGESTION_SOURCES = [
     title: 'GitHub Deployments',
     subtitle: 'Commits, PRs & pushes',
     icon: GitPullRequest,
-    color: '#A855F7',
+    color: '#9b7db8',
     badge: 'HMAC-SHA256',
     endpoint: 'POST /webhooks/github',
-    auth: 'X-Hub-Signature-256',
+    auth: 'X-Hub-Signature',
     desc: 'Commit diff inspection and line-by-line attribution of regressions.',
   },
   {
     id: 'kubernetes',
     title: 'Kubernetes Events',
-    subtitle: 'Pod & container life-cycles',
+    subtitle: 'Pod & container cycles',
     icon: Box,
-    color: '#38BDF8',
-    badge: 'Informer Daemon',
+    color: '#6b93b8',
+    badge: 'Informer',
     endpoint: 'DaemonSet Agent',
-    auth: 'ClusterRole / Token',
-    desc: 'OOMKilled events, CrashLoopBackOff states, and ReplicaSet rollouts.',
+    auth: 'ClusterRole',
+    desc: 'OOMKilled events, CrashLoopBackOff states, and rollouts.',
   },
   {
     id: 'ebpf',
     title: 'eBPF OBI Probes',
-    subtitle: 'Kernel socket diagnostics',
+    subtitle: 'Kernel diagnostics',
     icon: Cpu,
-    color: '#00CC66',
-    badge: 'Kernel RingBuffer',
+    color: '#6b9e6b',
+    badge: 'RingBuffer',
     endpoint: 'obi_stat_tcp_rtt',
-    auth: 'eBPF BPF_PROG_TYPE_TRACEPOINT',
-    desc: 'Captures TCP drops (kfree_skb) and network congestion in kernel space.',
+    auth: 'BPF_PROG',
+    desc: 'Captures TCP drops (kfree_skb) and network congestion.',
   },
   {
     id: 'flags',
     title: 'Feature Flags',
     subtitle: 'Toggles & rollouts',
     icon: Sliders,
-    color: '#F59E0B',
-    badge: 'Event Webhook',
+    color: '#b89b6b',
+    badge: 'Webhook',
     endpoint: 'POST /webhooks/flags',
-    auth: 'Bearer / Webhook Secret',
+    auth: 'Bearer',
     desc: 'LaunchDarkly and Flagsmith toggle events matched to error spikes.',
   },
   {
     id: 'cicd',
     title: 'CI/CD Pipelines',
-    subtitle: 'Actions & pipeline runs',
+    subtitle: 'Actions & runs',
     icon: Workflow,
-    color: '#6366F1',
-    badge: 'Pipeline Sync',
+    color: '#7b7db8',
+    badge: 'Pipeline',
     endpoint: 'POST /webhooks/ci',
-    auth: 'Token Auth',
-    desc: 'Build triggers, image tags, and deploy pipeline lifecycle markers.',
+    auth: 'Token',
+    desc: 'Build triggers, image tags, and deploy pipeline markers.',
   },
 ]
 
@@ -113,34 +113,32 @@ export function ArchitectureFlow() {
 
   return (
     <ExcalidrawCanvas
-      title="Evolvex System Architecture & Multi-Source Ingestion"
-      subtitle="Hover any ingestion source or core tier to inspect internal architecture and security boundaries"
+      title="System Architecture & Multi-Source Ingestion"
+      subtitle="Hover any ingestion source or tier to inspect internal architecture"
       onSimulate={handleSimulate}
       isSimulating={isSimulating}
       stepProgress={
         simStep === 1
           ? 'Multivariate Ingestion'
           : simStep === 2
-          ? 'API Vault & Queue Processing'
+          ? 'API Vault & Queue'
           : simStep === 3
-          ? 'PostgreSQL Temporal Indexing'
+          ? 'PostgreSQL Indexing'
           : simStep === 4
-          ? 'Live Web Console Synthesis'
+          ? 'Console Synthesis'
           : ''
       }
     >
-      <div className="flex flex-col items-center min-w-[860px] max-w-5xl mx-auto space-y-4 p-1">
-        {/* ================= TOP ROW: 6 MULTI-SIGNAL INGESTION SOURCES ================= */}
+      <div className="flex flex-col items-center min-w-[860px] max-w-5xl mx-auto space-y-3 p-1">
+        {/* TOP ROW: INGESTION SOURCES */}
         <div className="w-full">
-          <div className="flex items-center justify-between mb-2 px-1">
-            <span className="font-mono text-xs font-semibold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              Ingestion Data Plane • 6 Correlated Telemetry Streams
+          <div className="flex items-center justify-between mb-1.5 px-1">
+            <span className="font-mono text-[10px] text-muted-foreground/50 uppercase tracking-widest">
+              Ingestion Data Plane · 6 Telemetry Streams
             </span>
-            <StickyNote text="Raw Ingestion Plane · Zero Data Alteration" color="#00CC66" rotation={-1} />
           </div>
 
-          <div className="grid grid-cols-6 gap-2.5">
+          <div className="grid grid-cols-6 gap-2">
             {INGESTION_SOURCES.map((source) => {
               const Icon = source.icon
               const isSelected = selectedSource === source.id
@@ -152,46 +150,46 @@ export function ArchitectureFlow() {
                   onMouseEnter={() => setSelectedSource(source.id)}
                   className={`group p-2.5 rounded-xl border transition-all duration-200 cursor-pointer flex flex-col justify-between ${
                     isSelected || isSimulated
-                      ? 'bg-card border-transparent shadow-md scale-[1.02] -translate-y-1'
-                      : 'bg-card/70 border-border/70 dark:border-white/10 hover:border-border hover:bg-card/90'
+                      ? 'bg-card/80 border-transparent shadow-sm scale-[1.01] -translate-y-0.5'
+                      : 'bg-card/40 border-border/40 dark:border-white/6 hover:bg-card/60'
                   }`}
                   style={{
                     boxShadow: isSelected || isSimulated
-                      ? `0 8px 24px -6px ${source.color}35, 0 0 0 1.5px ${source.color}`
+                      ? `0 4px 16px -4px ${source.color}25, 0 0 0 1px ${source.color}40`
                       : undefined,
                   }}
                 >
                   <div>
                     <div className="flex items-center justify-between gap-1 mb-1.5">
                       <div
-                        className="w-6 h-6 rounded-md flex items-center justify-center text-xs font-semibold"
+                        className="w-5 h-5 rounded flex items-center justify-center"
                         style={{
-                          backgroundColor: `${source.color}20`,
+                          backgroundColor: `${source.color}12`,
                           color: source.color,
                         }}
                       >
-                        <Icon className="w-3.5 h-3.5" />
+                        <Icon className="w-3 h-3" />
                       </div>
                       <span
-                        className="text-[9px] font-mono px-1 py-0.5 rounded border"
+                        className="text-[8px] font-mono px-1 py-0.5 rounded"
                         style={{
-                          color: source.color,
-                          borderColor: `${source.color}40`,
-                          backgroundColor: `${source.color}10`,
+                          color: `${source.color}cc`,
+                          backgroundColor: `${source.color}08`,
+                          border: `1px solid ${source.color}20`,
                         }}
                       >
                         {source.badge}
                       </span>
                     </div>
-                    <div className="font-semibold text-xs text-foreground tracking-tight line-clamp-1">
+                    <div className="font-medium text-[11px] text-foreground/85 tracking-tight line-clamp-1">
                       {source.title}
                     </div>
-                    <div className="text-[10px] text-muted-foreground font-mono mt-0.5 line-clamp-1">
+                    <div className="text-[9px] text-muted-foreground/50 font-mono mt-0.5 line-clamp-1">
                       {source.subtitle}
                     </div>
                   </div>
 
-                  <div className="mt-2 pt-1.5 border-t border-border/50 text-[10px] text-muted-foreground line-clamp-2">
+                  <div className="mt-1.5 pt-1.5 border-t border-border/30 text-[9px] text-muted-foreground/50 line-clamp-2">
                     {source.desc}
                   </div>
                 </div>
@@ -200,110 +198,102 @@ export function ArchitectureFlow() {
           </div>
         </div>
 
-        {/* Dynamic Connector Down */}
+        {/* Connector: Sources → API */}
         <HandDrawnArrow
           direction="down"
-          label={`Inbound Ingestion: ${activeSrc.title}`}
-          sublabel={`Routed via ${activeSrc.endpoint} (${activeSrc.auth})`}
+          label={`${activeSrc.title} → ${activeSrc.endpoint}`}
+          sublabel={activeSrc.auth}
           color={activeSrc.color}
           isActive={true}
-          length={44}
+          length={36}
         />
 
-        {/* ================= TIER 1: EVOLVEX API & MULTI-TENANT VAULT ================= */}
+        {/* TIER 1: API & VAULT */}
         <div className="w-full">
           <ExcalidrawCard
             id="api"
-            title="Evolvex API (Express + tRPC + REST)"
-            subtitle="Multi-Tenant Vault, Secret-Hash Routing & Worker Dispatch"
+            title="Evolvex API"
+            subtitle="Express + tRPC · Multi-Tenant Vault · Worker Dispatch"
             stepNumber="01"
-            badge="AES-256-GCM Vault"
-            badgeColor="#00CC66"
-            accentColor="#00CC66"
+            badge="AES-256-GCM"
+            badgeColor="#6b9e6b"
+            accentColor="#6b9e6b"
             icon={ShieldCheck}
-            roughType="highlight"
-            roughColor="#00CC66"
             seed={811}
             isActive={simStep === 2}
             isSimulated={simStep === 2}
             details={{
               endpoint: 'POST https://evolvex-api.ishaandev.co.in/webhooks/*',
-              credential: 'Hashed tenant credentials (O(1) lookup via indexed secret_hash)',
-              protocol: 'tRPC for UI + REST endpoints for automated webhooks',
-              note: 'Zero plaintext credentials. All SigNoz API keys encrypted with org-scoped KMS keys.',
+              credential: 'O(1) indexed secret_hash lookup',
+              protocol: 'tRPC for UI + REST for webhooks',
+              note: 'Zero plaintext credentials. All keys encrypted with org-scoped KMS.',
             }}
           >
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 mt-2">
-              <div className="p-2.5 rounded bg-muted/40 border border-border/60">
-                <span className="font-mono text-xs font-semibold text-foreground flex items-center gap-1.5">
-                  <Lock className="w-3.5 h-3.5 text-emerald-400" />
-                  Tenant Credential Vault
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-2">
+              <div className="p-2 rounded-md bg-muted/20 border border-border/30">
+                <span className="font-mono text-[11px] font-medium text-foreground/75 flex items-center gap-1">
+                  <Lock className="w-3 h-3 opacity-50" />
+                  Credential Vault
                 </span>
-                <p className="text-[11px] text-muted-foreground mt-1">
-                  Org-scoped AES-256-GCM encryption for SigNoz API keys, GitHub PATs, and webhook secrets.
+                <p className="text-[10px] text-muted-foreground/50 mt-0.5">
+                  Org-scoped AES-256-GCM encryption for all API keys.
                 </p>
               </div>
 
-              <div className="p-2.5 rounded bg-muted/40 border border-border/60">
-                <span className="font-mono text-xs font-semibold text-foreground flex items-center gap-1.5">
-                  <Zap className="w-3.5 h-3.5 text-amber-400" />
-                  O(1) Webhook Resolution
+              <div className="p-2 rounded-md bg-muted/20 border border-border/30">
+                <span className="font-mono text-[11px] font-medium text-foreground/75 flex items-center gap-1">
+                  <Zap className="w-3 h-3 opacity-50" />
+                  O(1) Webhook Match
                 </span>
-                <p className="text-[11px] text-muted-foreground mt-1">
-                  Inbound alerts match workspace instantly using SHA-256 indexed hash with zero cross-tenant leakage.
+                <p className="text-[10px] text-muted-foreground/50 mt-0.5">
+                  SHA-256 indexed hash with zero cross-tenant leakage.
                 </p>
               </div>
 
-              <div className="p-2.5 rounded bg-muted/40 border border-border/60">
-                <span className="font-mono text-xs font-semibold text-foreground flex items-center gap-1.5">
-                  <Layers className="w-3.5 h-3.5 text-sky-400" />
+              <div className="p-2 rounded-md bg-muted/20 border border-border/30">
+                <span className="font-mono text-[11px] font-medium text-foreground/75 flex items-center gap-1">
+                  <Layers className="w-3 h-3 opacity-50" />
                   Correlation Workers
                 </span>
-                <p className="text-[11px] text-muted-foreground mt-1">
-                  Background worker pipeline queries SigNoz ClickHouse traces, git commits, and eBPF socket events.
+                <p className="text-[10px] text-muted-foreground/50 mt-0.5">
+                  Background pipeline queries traces, commits, and eBPF events.
                 </p>
               </div>
-            </div>
-
-            <div className="mt-2.5 pt-2 border-t border-border/60 font-handwriting text-xs text-emerald-400">
-              ⤹ decrypts workspace secrets in-memory only
             </div>
           </ExcalidrawCard>
         </div>
 
-        {/* Connector API -> Database */}
+        {/* Connector: API → DB */}
         <HandDrawnArrow
           direction="down"
-          label="Immutable Evidence Persistence"
-          sublabel="Relational Temporal Graphs & Pipeline Cache"
-          color="#38BDF8"
+          label="Evidence Persistence"
+          sublabel="temporal graphs & pipeline cache"
+          color="#6b93b8"
           isActive={simStep === 2 || simStep === 3}
-          length={40}
+          length={36}
         />
 
-        {/* ================= TIER 2: POSTGRESQL DATABASE ================= */}
+        {/* TIER 2: POSTGRESQL */}
         <div className="w-full">
           <ExcalidrawCard
             id="database"
-            title="PostgreSQL (Investigation Database)"
-            subtitle="Immutable Audit Log, Temporal Evidence & Incident Knowledge Base"
+            title="PostgreSQL"
+            subtitle="Immutable Audit Log · Temporal Evidence · Knowledge Base"
             stepNumber="02"
             badge="Relational Schema"
-            badgeColor="#38BDF8"
-            accentColor="#38BDF8"
+            badgeColor="#6b93b8"
+            accentColor="#6b93b8"
             icon={Database}
-            roughType="highlight"
-            roughColor="#38BDF8"
             seed={822}
             isActive={simStep === 3}
             isSimulated={simStep === 3}
             details={{
-              protocol: 'PostgreSQL 16 Connection Pool (pgpool)',
-              credential: 'SSL Required (sslmode=verify-full)',
-              note: 'Stores relational evidence, timeline entries, change events, and incident state machines.',
+              protocol: 'PostgreSQL 16 + pgpool',
+              credential: 'SSL (sslmode=verify-full)',
+              note: 'Stores evidence, timeline entries, change events, and incident state.',
             }}
           >
-            <div className="flex flex-wrap items-center gap-1.5 mt-2">
+            <div className="flex flex-wrap items-center gap-1 mt-1.5">
               {[
                 'organizations',
                 'investigations',
@@ -312,77 +302,64 @@ export function ArchitectureFlow() {
                 'runtime_signals',
                 'services',
                 'evidence',
-                'investigation_pipeline_cache',
+                'pipeline_cache',
               ].map((table) => (
                 <span
                   key={table}
-                  className="px-2 py-0.5 rounded text-[10px] font-mono bg-muted/60 text-muted-foreground border border-border/60 hover:text-foreground transition-colors"
+                  className="px-1.5 py-0.5 rounded text-[9px] font-mono bg-muted/25 text-muted-foreground/60 border border-border/30 hover:text-foreground/70 transition-colors"
                 >
                   {table}
                 </span>
               ))}
             </div>
-            <p className="mt-2 text-xs text-muted-foreground">
-              Provides immutable snapshot tracking for incident reviews, SLA calculations, and audit postmortems.
+            <p className="mt-1.5 text-[11px] text-muted-foreground/50">
+              Immutable snapshot tracking for incident reviews, SLA calculations, and audits.
             </p>
-            <div className="mt-2.5 pt-2 border-t border-border/60 font-handwriting text-xs text-sky-400">
-              ⤷ temporal relational integrity
-            </div>
           </ExcalidrawCard>
         </div>
 
-        {/* Connector Database -> React UI */}
+        {/* Connector: DB → Console */}
         <HandDrawnArrow
           direction="down"
-          label="tRPC Realtime Subscriptions & Server Components"
-          sublabel="Sub-second UI hydration with live incident updates"
-          color="#A855F7"
+          label="tRPC Subscriptions"
+          sublabel="sub-second hydration"
+          color="#9b7db8"
           isActive={simStep === 3 || simStep === 4}
-          length={40}
+          length={36}
         />
 
-        {/* ================= TIER 3: REACT CONSOLE ================= */}
+        {/* TIER 3: REACT CONSOLE */}
         <div className="w-full">
           <ExcalidrawCard
             id="console"
-            title="React UI Console (Next.js Application)"
-            subtitle="Investigations, Dynamic Service Topology & Interactive Trace Explorer"
+            title="React Console"
+            subtitle="Next.js · Investigations · Trace Explorer · Service Map"
             stepNumber="03"
-            badge="Customer Console"
-            badgeColor="#A855F7"
-            accentColor="#A855F7"
+            badge="Customer UI"
+            badgeColor="#9b7db8"
+            accentColor="#9b7db8"
             icon={Laptop}
-            roughType="highlight"
-            roughColor="#A855F7"
             seed={833}
             isActive={simStep === 4}
             isSimulated={simStep === 4}
             details={{
               endpoint: 'https://evolvex.ishaandev.co.in/investigations',
-              protocol: 'Next.js App Router + Tailwind CSS + Lucide Icons',
-              note: 'Interactive timeline rendering, eBPF drop heatmaps, and one-click rollback diffs.',
+              protocol: 'Next.js App Router + Tailwind CSS',
+              note: 'Interactive timelines, eBPF heatmaps, one-click rollback diffs.',
             }}
           >
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2 text-xs">
-              <div className="p-2 rounded bg-muted/40 border border-border/60 font-mono">
-                <span className="font-semibold text-foreground">Timeline View</span>
-                <p className="text-[10px] text-muted-foreground mt-0.5">Chronological evidence</p>
-              </div>
-              <div className="p-2 rounded bg-muted/40 border border-border/60 font-mono">
-                <span className="font-semibold text-foreground">Service Map</span>
-                <p className="text-[10px] text-muted-foreground mt-0.5">Distributed graph</p>
-              </div>
-              <div className="p-2 rounded bg-muted/40 border border-border/60 font-mono">
-                <span className="font-semibold text-foreground">Trace Explorer</span>
-                <p className="text-[10px] text-muted-foreground mt-0.5">ClickHouse spans</p>
-              </div>
-              <div className="p-2 rounded bg-muted/40 border border-border/60 font-mono">
-                <span className="font-semibold text-foreground">Settings Vault</span>
-                <p className="text-[10px] text-muted-foreground mt-0.5">Encrypted keys</p>
-              </div>
-            </div>
-            <div className="mt-2.5 pt-2 border-t border-border/60 font-handwriting text-xs text-purple-400">
-              ✓ realtime updates via websocket & tRPC
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 mt-2 text-[11px]">
+              {[
+                { name: 'Timeline View', desc: 'Chronological evidence' },
+                { name: 'Service Map', desc: 'Distributed graph' },
+                { name: 'Trace Explorer', desc: 'ClickHouse spans' },
+                { name: 'Settings Vault', desc: 'Encrypted keys' },
+              ].map((item) => (
+                <div key={item.name} className="p-1.5 rounded-md bg-muted/20 border border-border/30 font-mono">
+                  <span className="font-medium text-foreground/70">{item.name}</span>
+                  <p className="text-[9px] text-muted-foreground/40 mt-0.5">{item.desc}</p>
+                </div>
+              ))}
             </div>
           </ExcalidrawCard>
         </div>
