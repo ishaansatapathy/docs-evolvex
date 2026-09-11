@@ -30,7 +30,26 @@ import type { MDXComponents } from 'mdx/types'
  *  props from MDX (`<PricingTable plan="pro" />`). See
  *  `src/components/mdx/rich-content.tsx` for how the built-ins are written.
  */
+import { VideoScrollHero } from '@/components/video-scroll/video-scroll-hero'
+import { EvolvexLanding } from '@/components/evolvex/evolvex-landing'
+import { QuickstartFlow } from '@/components/docs/flows/quickstart-flow'
+import { ArchitectureFlow } from '@/components/docs/flows/architecture-flow'
+import { DeployCorrelationFlow } from '@/components/docs/flows/deploy-correlation-flow'
+import { EbpfObiFlow } from '@/components/docs/flows/ebpf-obi-flow'
+import { KubernetesFlow } from '@/components/docs/flows/kubernetes-flow'
+import { TelemetryIntelligenceFlow } from '@/components/docs/flows/telemetry-intelligence-flow'
+import { CicdFlagsFlow } from '@/components/docs/flows/cicd-flags-flow'
+import { SdkEventsFlow } from '@/components/docs/flows/sdk-events-flow'
+
 export const customComponents: MDXComponents = {
-  // Add your components here, e.g.:
-  // Highlight,
+  VideoScrollHero,
+  EvolvexLanding,
+  QuickstartFlow,
+  ArchitectureFlow,
+  DeployCorrelationFlow,
+  EbpfObiFlow,
+  KubernetesFlow,
+  TelemetryIntelligenceFlow,
+  CicdFlagsFlow,
+  SdkEventsFlow,
 }
