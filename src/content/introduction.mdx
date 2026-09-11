@@ -1,45 +1,40 @@
 ---
-title: Introduction
-description: Give readers a clear path from their first question to a result they can verify.
-mode: home
+title: Evolvex — Autonomous Incident Investigation OS on SigNoz
+description: Correlate alerts, traces, logs, eBPF kernel events, K8s, and deploys into verified root-cause timelines.
+mode: custom
+keywords:
+  - evolvex
+  - signoz
+  - investigation os
+  - ebpf
+  - opentelemetry
+  - root cause analysis
+  - incident management
+  - kubernetes
 ---
 
-<Hero
-  title="Build documentation around the reader"
-  subtitle="Start with a useful first result, organize what follows, and publish every format from one reviewable source."
-  primaryLabel="Get started"
-  primaryHref="/quickstart"
-  secondaryLabel="Publish your docs"
-  secondaryHref="/guides/create-a-site"
-/>
+<EvolvexLanding />
 
-## Build the reader journey
+<div className="sr-only">
 
-Begin with the task that brings most readers to your documentation, then make
-the next useful step obvious.
+# Evolvex — Autonomous Incident Investigation OS on SigNoz
 
-<CardGroup cols="2">
-  <Card title="Write your quickstart" icon="party-horn" href="/quickstart">
-    Turn prerequisites, setup, one realistic task, and verification into a short path.
-  </Card>
-  <Card title="Organize your navigation" icon="grid-round" href="/customization">
-    Group related tasks and references around how people use your product.
-  </Card>
-  <Card title="Document your API" icon="code-simple" href="/api">
-    Replace `openapi.yaml` to publish browsable endpoint docs with a live playground.
-  </Card>
-  <Card title="Learn the Thally workflow" icon="wrench" href="/guides/create-a-site">
-    Create, publish, and update sites from the Cloud dashboard, the CLI, or your AI tools.
-  </Card>
-</CardGroup>
+Evolvex is an autonomous incident investigation operating system built on top of SigNoz. It correlates alerts, distributed traces, structured logs, eBPF kernel events, Kubernetes cluster changes, and CI/CD git deployments into verified, root-cause incident timelines.
 
-## Publish from one source
+## Core Capabilities
 
-Thally turns the same reviewed content into HTML, search, agent discovery files,
-Markdown mirrors, and a read-only MCP surface — so people and AI tools read the
-same, current answer. Add only the locales your readers need.
+- **eBPF Socket Probes (OBI):** Zero-overhead kernel observation capturing TCP drops (`kfree_skb`), socket resets, and SYN retransmits at the network layer before application runtimes detect packet failure.
+- **SigNoz Bridge:** Continuous OTLP collector stream over gRPC port 4317 with automated HMAC SHA-256 webhook ingestion.
+- **CI/CD Deployment Correlation:** Pins GitHub commit SHAs and release webhooks directly onto latency inflection points with zero manual coordination.
+- **Autonomous Root Cause Analysis (RCA):** Synthesizes causal graphs across traces, kernel socket drops, and Kubernetes pod evictions in under 45 seconds with 94%+ confidence.
+- **SigNoz MCP Server:** Native Model Context Protocol interface exposing live telemetry query tools (`search_spans`, `get_incident_timeline`) to AI coding agents like Claude and Cursor.
+- **Multi-Tenant Vault:** Strict tenant isolation at the PostgreSQL layer with Row-Level Security (RLS) and envelope encryption for all credentials.
 
-<Note type="info" title="Start with the product, not the template">
-  Replace this page with the questions, terminology, and workflows your readers
-  already use. Keep `docs.json` focused on the path between those tasks.
-</Note>
+## Getting Started
+
+To install and run Evolvex locally or deploy on your Kubernetes cluster:
+1. Deploy SigNoz with Foundry using `pnpm signoz:local:up`.
+2. Connect your OpenTelemetry collector and eBPF instrumentation daemon.
+3. Configure your tenant webhook secrets and explore the autonomous investigation OS.
+
+</div>
