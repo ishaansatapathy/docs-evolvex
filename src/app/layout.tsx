@@ -258,7 +258,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
       className={cn(fontSans.variable, fontMono.variable)}
     >
       <head>
-        <script id="thally-runtime-name-shim" dangerouslySetInnerHTML={{ __html: runtimeNameShim }} />
+        <Script id="thally-runtime-name-shim" strategy="beforeInteractive" dangerouslySetInnerHTML={{ __html: runtimeNameShim }} />
         <JsonLdScript data={siteJsonLd} />
         {/* Google Fonts for custom body/heading fonts set in docs.json */}
         {googleFontUrls.length > 0 && (
