@@ -58,7 +58,7 @@ export function QuickstartFlow() {
       isSimulating={simulatingStep !== null}
       stepProgress={getStepProgressLabel()}
     >
-      <div className="flex flex-col items-center min-w-[700px] max-w-3xl mx-auto">
+      <div className="flex flex-col items-center w-full max-w-3xl mx-auto">
         {/* TIER 1: APPLICATION */}
         <div className="w-full">
           <div className="flex items-center justify-between mb-1.5 px-1">
@@ -271,7 +271,7 @@ export function QuickstartFlow() {
         />
 
         {/* TIER 4: DOWNSTREAM TARGETS */}
-        <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-2.5">
+        <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 min-w-0">
           <ExcalidrawCard
             id="signoz-api"
             title="SigNoz Query API"
