@@ -15,8 +15,10 @@ const config: Config = {
     extend: {
       fontFamily: {
         sans: ['var(--font-sans)', 'Inter', 'system-ui', 'sans-serif'],
+        display: ['"Space Grotesk"', 'var(--font-sans)', 'Inter', 'sans-serif'],
         heading: ['var(--font-heading)', 'var(--font-sans)', 'Inter', 'sans-serif'],
         mono: ['var(--font-mono)', 'JetBrains Mono', 'IBM Plex Mono', 'monospace'],
+        handwriting: ['Caveat', 'cursive'],
       },
       fontSize: {
         '2xs': ['0.625rem', { lineHeight: '1.25rem' }],
