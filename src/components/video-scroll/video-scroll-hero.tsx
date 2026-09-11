@@ -347,7 +347,7 @@ export function VideoScrollHero() {
             </div>
 
             <div className="w-full max-w-lg bg-black/70 border border-gray-800 rounded-lg p-3 font-mono text-xs text-gray-400 flex items-center justify-between">
-              <span>$ git clone https://github.com/thallylabs/evolvex</span>
+              <span>$ git clone https://github.com/ishaansatapathy/EvolveX.git</span>
               <span className="text-emerald-400 text-[11px]">COPIED</span>
             </div>
           </div>
