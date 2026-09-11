@@ -25,6 +25,15 @@ Evolvex is an **autonomous investigation operating system** built on top of SigN
 
 <QuickstartFlow />
 
+<CardGroup cols={2}>
+  <Card title="Launch Hosted Console" href="https://evolvex.ishaandev.co.in" icon="globe">
+    Access the live multi-tenant Evolvex investigation OS and configure your workspace credentials.
+  </Card>
+  <Card title="Evolvex GitHub Monorepo" href="https://github.com/ishaansatapathy/EvolveX" icon="github">
+    Explore the complete open-source codebase, Helm charts, eBPF probes, and TypeScript SDK.
+  </Card>
+</CardGroup>
+
 ## The three SigNoz keys
 
 Before starting, understand the three distinct credentials to avoid authentication mismatches:
@@ -132,7 +141,7 @@ Before starting, understand the three distinct credentials to avoid authenticati
   </Step>
 
   <Step title="Connect your Evolvex workspace vault">
-    1. Sign in to the hosted Evolvex console at `https://evolvex.ishaandev.co.in`.
+    1. Sign in to the hosted Evolvex console at [https://evolvex.ishaandev.co.in](https://evolvex.ishaandev.co.in).
     2. Go to **Settings → Connect integrations → SigNoz**.
     3. Enter your **Cloud URL** and **API Key**, then click **Save SigNoz** → **Test Connection**.
     4. Click **Generate webhook credentials**. Copy the generated:
@@ -154,7 +163,7 @@ Before starting, understand the three distinct credentials to avoid authenticati
   <Step title="Verify the autonomous investigation case">
     Trigger your application endpoint or run `pnpm signoz:p99`. Within 1-2 minutes:
     
-    1. Open **Investigations** in Evolvex.
+    1. Open **Investigations** in the [Evolvex Console](https://evolvex.ishaandev.co.in).
     2. A new case will transition from `building` to `ready`.
     3. Open the investigation to view:
        - **Incident Story:** Chronological narrative synthesized directly from telemetry.
@@ -165,6 +174,8 @@ Before starting, understand the three distinct credentials to avoid authenticati
 </Steps>
 
 ## Next steps
+
+<GitHub repo="ishaansatapathy/EvolveX" title="Evolvex GitHub Monorepo" description="Star the repository on GitHub, inspect ClickHouse Query API v5 integration code, and review Helm charts." />
 
 <CardGroup cols={2}>
   <Card title="System Architecture" href="/guides/architecture" icon="layers">
