@@ -7,6 +7,9 @@ import {
   Activity,
   ChevronLeft,
   ChevronRight,
+  MoveHorizontal,
+  Maximize2,
+  Minimize2,
 } from 'lucide-react'
 import { RoughNotation } from 'react-rough-notation'
 
@@ -475,6 +478,13 @@ export function ExcalidrawCanvas({
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const [scrollProgress, setScrollProgress] = useState(0)
   const [hasOverflow, setHasOverflow] = useState(false)
+  const [fitMode, setFitMode] = useState(false)
+
+  // Drag-to-scroll & Swipe states
+  const isDraggingRef = useRef(false)
+  const startXRef = useRef(0)
+  const scrollLeftRef = useRef(0)
+  const [isDragging, setIsDragging] = useState(false)
 
   const handleScroll = () => {
     const el = scrollContainerRef.current
@@ -495,16 +505,60 @@ export function ExcalidrawCanvas({
     const ro = new ResizeObserver(handleScroll)
     ro.observe(el)
     return () => ro.disconnect()
-  }, [])
+  }, [fitMode])
 
   const scroll = (direction: 'left' | 'right') => {
     const el = scrollContainerRef.current
     if (!el) return
-    el.scrollBy({ left: direction === 'left' ? -320 : 320, behavior: 'smooth' })
+    el.scrollBy({ left: direction === 'left' ? -280 : 280, behavior: 'smooth' })
+  }
+
+  // Mouse drag handlers
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (e.button !== 0) return
+    const target = e.target as HTMLElement
+    if (target.closest('button, a, input, textarea, [role="button"], code')) return
+
+    isDraggingRef.current = true
+    setIsDragging(true)
+    startXRef.current = e.pageX - (scrollContainerRef.current?.offsetLeft || 0)
+    scrollLeftRef.current = scrollContainerRef.current?.scrollLeft || 0
+  }
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDraggingRef.current || !scrollContainerRef.current) return
+    e.preventDefault()
+    const x = e.pageX - (scrollContainerRef.current.offsetLeft || 0)
+    const walk = (x - startXRef.current) * 1.5
+    scrollContainerRef.current.scrollLeft = scrollLeftRef.current - walk
+  }
+
+  const handleMouseUpOrLeave = () => {
+    if (isDraggingRef.current) {
+      isDraggingRef.current = false
+      setIsDragging(false)
+    }
+  }
+
+  // Touch swipe handlers
+  const touchStartXRef = useRef(0)
+  const touchScrollLeftRef = useRef(0)
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length !== 1) return
+    touchStartXRef.current = e.touches[0].pageX
+    touchScrollLeftRef.current = scrollContainerRef.current?.scrollLeft || 0
+  }
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!scrollContainerRef.current || e.touches.length !== 1) return
+    const x = e.touches[0].pageX
+    const walk = (x - touchStartXRef.current) * 1.3
+    scrollContainerRef.current.scrollLeft = touchScrollLeftRef.current - walk
   }
 
   return (
-    <div className="my-8 rounded-2xl border border-border/70 dark:border-white/10 bg-muted/20 dark:bg-[#06080c]/80 p-4 sm:p-6 relative">
+    <div className="my-8 rounded-2xl border border-border/70 dark:border-white/10 bg-muted/20 dark:bg-[#06080c]/80 p-4 sm:p-6 relative transition-all duration-300">
       {/* Corner notch pins — landing page precision aesthetic */}
       {['-top-1 -left-1', '-top-1 -right-1', '-bottom-1 -left-1', '-bottom-1 -right-1'].map((pos) => (
         <span
@@ -534,58 +588,116 @@ export function ExcalidrawCanvas({
           )}
         </div>
 
-        {onSimulate && (
+        <div className="flex items-center gap-2">
+          {/* Fit / Expand column adjustment toggle */}
           <button
-            onClick={onSimulate}
-            disabled={isSimulating}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-              isSimulating
-                ? 'bg-rose-500/10 text-rose-400 border border-rose-500/30 cursor-wait'
-                : 'bg-accent/10 text-accent hover:bg-accent/20 border border-accent/20 hover:border-accent/40'
+            type="button"
+            onClick={() => setFitMode(!fitMode)}
+            title={fitMode ? 'Expand to wide scroll' : 'Fit columns to screen'}
+            className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-mono border transition-all ${
+              fitMode
+                ? 'bg-[#ef4444]/15 text-[#ef4444] border-[#ef4444]/30 shadow-sm'
+                : 'bg-muted/40 text-muted-foreground/70 border-border/40 hover:text-foreground hover:border-border'
             }`}
           >
-            <Activity className={`w-3.5 h-3.5 ${isSimulating ? 'animate-spin' : ''}`} />
-            {isSimulating ? stepProgress || 'Tracing...' : 'Simulate Signal Flow'}
+            {fitMode ? (
+              <>
+                <Minimize2 className="w-3 h-3" />
+                <span>Fit: ON</span>
+              </>
+            ) : (
+              <>
+                <Maximize2 className="w-3 h-3" />
+                <span>Adjust Width</span>
+              </>
+            )}
           </button>
-        )}
+
+          {onSimulate && (
+            <button
+              onClick={onSimulate}
+              disabled={isSimulating}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                isSimulating
+                  ? 'bg-rose-500/10 text-rose-400 border border-rose-500/30 cursor-wait'
+                  : 'bg-accent/10 text-accent hover:bg-accent/20 border border-accent/20 hover:border-accent/40'
+              }`}
+            >
+              <Activity className={`w-3.5 h-3.5 ${isSimulating ? 'animate-spin' : ''}`} />
+              {isSimulating ? stepProgress || 'Tracing...' : 'Simulate Signal Flow'}
+            </button>
+          )}
+        </div>
       </div>
 
-      {/* Flow content */}
+      {/* Flow content with drag-to-scroll & touch swipe */}
       <div
         ref={scrollContainerRef}
         onScroll={handleScroll}
-        className="relative z-10 overflow-x-auto overflow-y-hidden pb-2 -mx-1 px-1 scrollbar-thin scrollbar-thumb-muted-foreground/20 scrollbar-track-transparent"
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUpOrLeave}
+        onMouseLeave={handleMouseUpOrLeave}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        className={`relative z-10 pb-2 -mx-1 px-1 scrollbar-thin scrollbar-thumb-muted-foreground/20 scrollbar-track-transparent ${
+          fitMode
+            ? 'w-full overflow-x-visible'
+            : 'overflow-x-auto overflow-y-hidden select-none'
+        } ${hasOverflow && !fitMode ? (isDragging ? 'cursor-grabbing' : 'cursor-grab') : ''}`}
       >
-        {children}
+        <div className={fitMode ? '[&>*]:min-w-0 [&>*]:w-full [&_*]:min-w-0' : ''}>
+          {children}
+        </div>
       </div>
 
-      {/* Bottom scroller — only shows when content overflows */}
-      {hasOverflow && (
-        <div className="relative z-10 mt-3 pt-2 border-t border-border/30 dark:border-white/5 flex items-center justify-end gap-2">
-          <span className="text-[10px] text-muted-foreground/40 mr-auto">
-            ← scroll →
-          </span>
-          <button
-            onClick={() => scroll('left')}
-            className="p-1 rounded border border-border/50 hover:border-border bg-transparent text-muted-foreground/50 hover:text-foreground/70 transition-colors"
-          >
-            <ChevronLeft className="w-3 h-3" />
-          </button>
-          <div className="w-16 sm:w-24 h-1 rounded-full bg-border/40 overflow-hidden">
-            <div
-              className="h-full rounded-full bg-muted-foreground/30 transition-all duration-150"
-              style={{
-                width: '30%',
-                marginLeft: `${scrollProgress * 70}%`,
-              }}
-            />
+      {/* Bottom scroller — shows drag/swipe instruction & smooth scroller */}
+      {hasOverflow && !fitMode && (
+        <div className="relative z-10 mt-3 pt-2 border-t border-border/30 dark:border-white/5 flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-1.5 text-[11px] font-mono text-muted-foreground/60 select-none">
+            <MoveHorizontal className="w-3.5 h-3.5 text-[#ef4444]" />
+            <span>Swipe or drag columns to adjust ← →</span>
           </div>
-          <button
-            onClick={() => scroll('right')}
-            className="p-1 rounded border border-border/50 hover:border-border bg-transparent text-muted-foreground/50 hover:text-foreground/70 transition-colors"
-          >
-            <ChevronRight className="w-3 h-3" />
-          </button>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => scroll('left')}
+              title="Scroll left"
+              className="p-1 rounded-md border border-border/50 hover:border-[#ef4444]/40 bg-transparent text-muted-foreground/60 hover:text-foreground transition-colors"
+            >
+              <ChevronLeft className="w-3.5 h-3.5" />
+            </button>
+            <div
+              className="w-20 sm:w-28 h-1.5 rounded-full bg-border/40 cursor-pointer overflow-hidden relative"
+              title="Drag or click to adjust position"
+              onClick={(e) => {
+                const rect = e.currentTarget.getBoundingClientRect()
+                const clickX = e.clientX - rect.left
+                const ratio = clickX / rect.width
+                if (scrollContainerRef.current) {
+                  const maxScroll = scrollContainerRef.current.scrollWidth - scrollContainerRef.current.clientWidth
+                  scrollContainerRef.current.scrollTo({ left: ratio * maxScroll, behavior: 'smooth' })
+                }
+              }}
+            >
+              <div
+                className="h-full rounded-full bg-[#ef4444]/70 transition-all duration-150"
+                style={{
+                  width: '30%',
+                  marginLeft: `${scrollProgress * 70}%`,
+                }}
+              />
+            </div>
+            <button
+              type="button"
+              onClick={() => scroll('right')}
+              title="Scroll right"
+              className="p-1 rounded-md border border-border/50 hover:border-[#ef4444]/40 bg-transparent text-muted-foreground/60 hover:text-foreground transition-colors"
+            >
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
       )}
     </div>
