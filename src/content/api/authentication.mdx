@@ -1,53 +1,81 @@
 ---
 title: Authentication
-description: How to authenticate requests, and how to document your own scheme.
+description: Authenticate requests to the Evolvex API using Session Cookies, Workspace Webhook Passwords, or Machine-to-Machine Bearer Tokens.
+keywords:
+  - api authentication
+  - bearer token
+  - webhook basic auth
+  - csrf protection
+  - vault secrets
+  - evolvex api key
 ---
 
-The Sample Posts API is intentionally public: no key, token, or header is
-required, so every request in this reference works the moment you press
-**Send**.
+The Evolvex API enforces authentication across all routes according to the caller's operational context.
 
-Your API almost certainly is not public. This page shows how to document the
-two most common schemes so readers always know exactly what to put in the
-request — replace it with the scheme your API uses.
+## Authentication mechanisms
 
-## Documenting a bearer token
+| Scheme | Target Surface | Header / Credential |
+| :--- | :--- | :--- |
+| **Workspace Webhook Auth** | `POST /webhooks/signoz` | HTTP Basic Auth: `evolvex:<workspace-password>` |
+| **GitHub HMAC Signature** | `POST /webhooks/github` | `X-Hub-Signature-256: sha256=<hex_digest>` |
+| **Machine-to-Machine Token** | `/api/v1/sdk/*`, `/api/mcp` | `Authorization: Bearer <EVOLVEX_API_KEY>` |
+| **Browser Session Cookie** | Web UI and `/trpc/*` routes | `Cookie: session_token=...` with `x-evolvex-csrf: 1` |
 
-Show the header exactly as readers must send it, then where the token comes
-from:
+---
 
-```bash
-curl --request GET \
-  --url 'https://api.yourproduct.com/v1/posts' \
-  --header 'Authorization: Bearer YOUR_API_TOKEN'
-```
+## 1. Webhook authentication (SigNoz alerts)
 
-## Documenting an API key
+SigNoz notification channels authenticate using standard HTTP Basic Auth. The username is fixed to `evolvex`, and the password is your organization's unique vault secret:
 
 ```bash
-curl --request GET \
-  --url 'https://api.yourproduct.com/v1/posts' \
-  --header 'X-Api-Key: YOUR_API_KEY'
+curl -X POST "https://evolvex-api.ishaandev.co.in/webhooks/signoz" \
+  -u "evolvex:your-workspace-generated-password" \
+  -H "Content-Type: application/json" \
+  -d '{"status":"firing","alerts":[{"status":"firing","labels":{"alertname":"p99 latency spike"}}]}'
 ```
 
-## Declare the scheme in OpenAPI
+<Note>
+  Evolvex stores a SHA-256 hash of this password in the database (`secret_hash`), enabling $O(1)$ tenant resolution without decrypting secret tables.
+</Note>
 
-Add a security scheme to `openapi.yaml` and the generated endpoint pages will
-show the requirement — and the playground will prompt for the credential —
-automatically:
+---
 
-```yaml
-components:
-  securitySchemes:
-    bearerAuth:
-      type: http
-      scheme: bearer
-security:
-  - bearerAuth: []
+## 2. Machine-to-machine bearer tokens
+
+Automated incident remediation scripts, CI/CD runners, and the Telemetry Intelligence collector agent authenticate using Bearer tokens:
+
+```bash
+curl -X GET "https://evolvex-api.ishaandev.co.in/api/investigations" \
+  -H "Authorization: Bearer ${EVOLVEX_API_KEY}" \
+  -H "Content-Type: application/json"
 ```
 
-<Tip>
-  Tell readers where to create and revoke credentials, how long they live, and
-  what happens when one expires. Those three answers prevent most
-  authentication support tickets.
-</Tip>
+Configure your token in the shell:
+```bash
+export EVOLVEX_API_KEY="evx_live_9b82f019c4..."
+```
+
+---
+
+## 3. GitHub webhook HMAC-SHA256 signatures
+
+GitHub push events are authenticated by computing an HMAC-SHA256 digest of the request body using your configured `GITHUB_WEBHOOK_SECRET`:
+
+```text
+X-Hub-Signature-256: sha256=d57946461f76481f075d77f6b8ff4350f48f4565708832f3e8280f2ab7514914
+```
+
+Evolvex performs a constant-time comparison on the computed digest to protect against timing attacks.
+
+---
+
+## 4. Browser sessions and CSRF protection
+
+For security, browser requests originating from the Next.js web application rely on hardened, `httpOnly` session cookies combined with a custom header:
+
+```text
+Cookie: session_token=...
+x-evolvex-csrf: 1
+```
+
+Requests lacking the `x-evolvex-csrf` header or originating from untrusted domains are rejected with `403 Untrusted request origin`.
