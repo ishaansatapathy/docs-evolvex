@@ -1,0 +1,125 @@
+---
+title: SigNoz MCP Server & AI Agents
+description: Connect Cursor, Claude Code, and autonomous AI agents directly to Evolvex's telemetry layer via Model Context Protocol.
+keywords:
+  - mcp
+  - model context protocol
+  - cursor ai
+  - claude code
+  - signoz mcp server
+  - ai observability
+  - query builder v5
+---
+
+The [SigNoz MCP server](https://github.com/SigNoz/signoz-mcp-server) (Model Context Protocol) allows AI coding assistants like **Cursor**, **Claude Code**, and autonomous agents to query the exact same telemetry data Evolvex investigates—live traces, error logs, latency metrics, and alert rules—using natural language.
+
+## Why MCP matters for Evolvex
+
+Evolvex's investigation pipeline queries SigNoz's Query Builder v5 API (`packages/services/signoz/client.ts`) to build evidence timelines and pinpoint code diffs. The MCP server exposes that **identical backend** conversationally to your AI coding agents:
+
+```text
+"Show me the p99 latency for payments-svc over the last hour."
+"List all active alerts attached to the EvolveX-Alerts channel."
+"Search error traces for POST /checkout and find the exception stack trace."
+```
+
+Every response is backed directly by the ClickHouse Query Engine, establishing a complete loop between developer tools, telemetry, and automated investigations.
+
+## Connecting Cursor to SigNoz MCP
+
+<Tabs>
+  <Tab title="Option A: SigNoz Cloud (Zero Install)">
+    SigNoz Cloud provides a managed MCP gateway. Add the following to `.cursor/mcp.json`:
+
+    ```json
+    {
+      "mcpServers": {
+        "signoz": {
+          "url": "https://mcp.in2.signoz.cloud/mcp"
+        }
+      }
+    }
+    ```
+
+    Replace `in2` with your SigNoz Cloud region. On initial use, Cursor prompts for browser OAuth authentication with your SigNoz instance.
+  </Tab>
+
+  <Tab title="Option B: Foundry Self-Host (casting.yaml)">
+    The Foundry stack in the Evolvex repository enables the MCP molding by default:
+
+    ```yaml
+    spec:
+      mcp:
+        spec:
+          enabled: true
+    ```
+
+    Once started with `pnpm signoz:local:up`, point Cursor to your local container on port 8000:
+
+    ```json
+    {
+      "mcpServers": {
+        "signoz-local": {
+          "url": "http://localhost:8000/mcp",
+          "headers": {
+            "SIGNOZ-API-KEY": "your-signoz-api-key"
+          }
+        }
+      }
+    }
+    ```
+  </Tab>
+
+  <Tab title="Option C: Stdio Mode (Claude Desktop)">
+    Download the release binary and run it via standard input/output:
+
+    ```json
+    {
+      "mcpServers": {
+        "signoz": {
+          "command": "/usr/local/bin/signoz-mcp-server",
+          "args": [],
+          "env": {
+            "SIGNOZ_URL": "https://your-org.in2.signoz.cloud",
+            "SIGNOZ_API_KEY": "your-api-key-here"
+          }
+        }
+      }
+    }
+    ```
+  </Tab>
+</Tabs>
+
+## Key MCP tools reference
+
+The server provides 30+ specialized tools for querying telemetry:
+
+| MCP Tool | Evolvex Investigation Equivalent | Description |
+| :--- | :--- | :--- |
+| `signoz_list_services` | Service Health & Topology | Confirms which services are emitting active traces. |
+| `signoz_search_traces` | Slow & Error Trace Identification | Queries spans matching latency, error, or attribute filters. |
+| `signoz_get_trace_details` | Deep Trace Waterfall View | Fetches the complete span tree for a given `traceId`. |
+| `signoz_aggregate_traces` | Percentile Metrics Calculation | Calculates p50, p90, and p99 percentiles across arbitrary time slices. |
+| `signoz_search_logs` | Error Log Evidence Mining | Retrieves structured logs correlated with specific traces. |
+| `signoz_list_alert_rules` | Incident Trigger Auditing | Inspects alert thresholds and evaluation intervals. |
+| `signoz_get_alert_history` | State Transition Timeline | Reviews state history (firing, acknowledged, resolved). |
+| `signoz_create_dashboard` | One-Click Dashboard Provisioning | Creates a service telemetry dashboard in SigNoz. |
+
+## Native Evolvex ops workflows
+
+For CI/CD environments and automated incident response scripts where an interactive AI client is not available, Evolvex ships native scripts implementing the same MCP workflows:
+
+```bash
+# 1. Author alert rules programmatically (mirrors signoz_create_alert)
+pnpm signoz:alert-setup -- --channel EvolveX-Alerts
+
+# 2. Compile an immutable postmortem pack from live telemetry
+pnpm signoz:postmortem-pack -- --service payments-svc --window 60
+
+# 3. Create a 3-widget service overview dashboard (mirrors signoz_create_dashboard)
+pnpm signoz:dashboard-setup -- --service payments-svc
+```
+
+<Tip>
+  You can also create dashboards directly in the product: open any investigation in Evolvex, click **Export**, and select **Create SigNoz dashboard**. Evolvex invokes `POST /api/v1/dashboards` scoped to the affected service and logs an audit trail entry.
+</Tip>
