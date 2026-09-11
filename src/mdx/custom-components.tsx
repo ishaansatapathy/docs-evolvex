@@ -41,6 +41,9 @@ import { TelemetryIntelligenceFlow } from '@/components/docs/flows/telemetry-int
 import { CicdFlagsFlow } from '@/components/docs/flows/cicd-flags-flow'
 import { SdkEventsFlow } from '@/components/docs/flows/sdk-events-flow'
 
+import { Highlight } from '@/components/ui/highlight'
+import { RoughMark } from '@/components/ui/rough-mark'
+
 export const customComponents: MDXComponents = {
   VideoScrollHero,
   EvolvexLanding,
@@ -52,4 +55,7 @@ export const customComponents: MDXComponents = {
   TelemetryIntelligenceFlow,
   CicdFlagsFlow,
   SdkEventsFlow,
+  Highlight,
+  RoughMark,
 }
+
