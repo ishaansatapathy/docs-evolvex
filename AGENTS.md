@@ -60,4 +60,23 @@ upgrade an existing site or move a production release pointer.
 
 ## Product context
 
-<!-- Add canonical terminology, audience details, and content boundaries here. -->
+- **Product Name:** Evolvex — Autonomous Incident Investigation OS on SigNoz
+- **Target Audience:** Site Reliability Engineers (SREs), Platform Engineers, On-Call Responders, and DevOps Teams.
+- **Core Architecture:** Evolvex operates on top of SigNoz's OpenTelemetry data plane, pulling ClickHouse traces, logs, and metrics via Query API v5, correlating them with Kubernetes pod lifecycles, Linux eBPF kernel drops, CI/CD pipelines, and GitHub deployments.
+- **Canonical Terminology:**
+  - *Ingestion Key:* OTLP telemetry write key from applications to SigNoz.
+  - *API Key:* Read-only Query API v5 access key for Evolvex to read SigNoz ClickHouse data (Editor/Admin role).
+  - *Webhook Password:* Basic auth token for SigNoz Notification Channels routing alerts to Evolvex.
+  - *OBI:* OpenTelemetry eBPF Instrumentation capturing kernel TCP latency (`obi_stat_tcp_rtt_seconds`) and socket drops.
+  - *Zero Fake Data:* Core principle requiring all documented telemetry, endpoints, and schemas to match real ClickHouse/PostgreSQL data structures.
+- **Content Boundaries:** Documentation covers integration, SDK usage, webhook routing, postmortems, and incident debugging. All data plane queries remain read-only.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->
