@@ -1,49 +1,72 @@
 ---
-title: API overview
+title: API Overview
 navTitle: Overview
-description: What this API reference covers and how to try every request live.
+description: Interactive reference for the Evolvex REST, Webhook, and Model Context Protocol (MCP) endpoints.
+keywords:
+  - api overview
+  - evolvex rest api
+  - webhook endpoints
+  - incident api
+  - openapi playground
+  - mcp
 ---
 
-This reference documents the Sample Posts API — a small, working API backed by
-the public [JSONPlaceholder](https://jsonplaceholder.typicode.com) service.
-Every endpoint page has a **Send** button that runs the real request from your
-browser, so you can inspect live responses before writing a line of code.
+The Evolvex API exposes endpoints for ingesting observability webhooks, managing incident investigations, querying causal timelines, and executing Model Context Protocol (MCP) tools.
 
-## Base URL
+Every endpoint page in this reference features an interactive **Send** button powered by Thally, allowing you to test queries live against your development or staging deployment.
 
-All requests use the same base URL:
+## Base URLs
 
-```text
-https://jsonplaceholder.typicode.com
+| Environment | Base URL | Usage |
+| :--- | :--- | :--- |
+| **Production** | `https://evolvex-api.ishaandev.co.in` | Hosted customer workspaces & live webhooks |
+| **Local Development** | `http://localhost:8000` | Local development via Docker / `pnpm dev` |
+
+## API surfaces
+
+The Evolvex API consists of four distinct surfaces:
+
+<CardGroup cols={2}>
+  <Card title="Inbound Webhooks" icon="webhook">
+    Ingests fired alerts from SigNoz, git commits from GitHub, cluster changes from Kubernetes, and kernel signals from eBPF.
+  </Card>
+  <Card title="Investigations & Timelines" icon="flame">
+    Query active incident cases, inspect multi-signal causal timelines, and fetch rule-based narratives.
+  </Card>
+  <Card title="Telemetry & Health" icon="activity">
+    Dependency-aware deep health checks (`/health/deep`) validating SigNoz API, Redis, and database pool state.
+  </Card>
+  <Card title="Model Context Protocol (MCP)" icon="bot">
+    Natural language telemetry tools queryable by Claude Code, Cursor, and autonomous engineering agents.
+  </Card>
+</CardGroup>
+
+## Quick example: List investigations
+
+Query your workspace's active and resolved incident cases:
+
+```bash
+curl -X GET "https://evolvex-api.ishaandev.co.in/api/investigations?limit=10&caseStatus=open" \
+  -H "Authorization: Bearer ${EVOLVEX_API_KEY}" \
+  -H "Content-Type: application/json"
 ```
 
-## Try your first request
+Example response:
+```json
+[
+  {
+    "id": "c4a78a10-2b36-4d22-9e8a-e9012f205ab1",
+    "shortId": "INV-1042",
+    "title": "p99 latency spike — payments-svc",
+    "status": "ready",
+    "caseStatus": "open",
+    "severity": "critical",
+    "affectedServices": ["payments-svc", "redis-cache"],
+    "createdAt": "2026-09-10T18:41:00Z"
+  }
+]
+```
 
-<Steps>
-  <Step title="Open an endpoint">
-    Pick **Get a post** from the Posts group in the sidebar.
-  </Step>
-  <Step title="Send it">
-    Keep the default id of `1` and press **Send**. The response panel shows a
-    real `200` with the post body.
-  </Step>
-  <Step title="Change the input">
-    Try an id above `100` to see the API's `404` behavior.
-  </Step>
-</Steps>
+## Exploring endpoints
 
-Writes are safe to experiment with: the demo server accepts `POST` requests
-and echoes the created resource back with a generated id without storing it.
-
-## Make this reference yours
-
-This sample exists so the reference has something real to show. To document
-your own API, replace `openapi.yaml` at the repository root with your
-specification — the endpoint pages, navigation, and playground regenerate from
-it on the next publish.
-
-<Note type="info" title="Keep the overview pages">
-  Readers orient faster when a reference opens with what the API does, how to
-  authenticate, and one runnable request. Rewrite this page and
-  [Authentication](/api/authentication) for your API instead of deleting them.
-</Note>
+Select any endpoint from the sidebar under **Webhooks**, **Investigations**, or **Telemetry & Health** to inspect the request schemas, response codes, and execute interactive calls.
