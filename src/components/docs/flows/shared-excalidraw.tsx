@@ -8,6 +8,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react'
+import { RoughNotation } from 'react-rough-notation'
 
 /**
  * Thin pencil-stroke border — CSS only, no roughjs bulk.
@@ -36,6 +37,7 @@ export function RoughBorder({
     />
   )
 }
+
 
 /**
  * MaskingTape — kept as a no-op export for backward compat.
@@ -161,12 +163,12 @@ export function HandDrawnArrow({
 }
 
 /**
- * Sticky Note — simplified to a quiet inline annotation.
+ * Sticky Note — charming sketchy inline annotation with subtle tilt and handwriting font.
  */
 export function StickyNote({
   text,
-  color = '#a3a3a3',
-  rotation = 0,
+  color = '#ef4444',
+  rotation = -1.5,
   badge,
 }: {
   text: string
@@ -176,11 +178,16 @@ export function StickyNote({
 }) {
   return (
     <span
-      className="inline-flex items-center gap-1 text-[10px] font-mono text-muted-foreground/60 select-none"
-      style={{ transform: `rotate(${rotation * 0.3}deg)` }}
+      className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-handwriting tracking-wide border border-dashed select-none transition-all duration-200 hover:scale-105 hover:rotate-0"
+      style={{
+        transform: `rotate(${rotation}deg)`,
+        borderColor: `${color}40`,
+        backgroundColor: `${color}0c`,
+        color: color,
+      }}
     >
-      {badge && <span className="font-semibold opacity-70">{badge}:</span>}
-      {text}
+      {badge && <span className="font-mono text-[9px] uppercase tracking-wider font-semibold opacity-75">{badge}:</span>}
+      <span>{text}</span>
     </span>
   )
 }
@@ -225,6 +232,8 @@ export function ExcalidrawCard({
   badge,
   badgeColor = '#737373',
   icon: Icon,
+  roughType,
+  roughColor,
   isActive = false,
   isSimulated = false,
   onMouseEnter,
@@ -235,8 +244,13 @@ export function ExcalidrawCard({
   className = '',
   accentColor = '#737373',
 }: ExcalidrawCardProps) {
+  const [mounted, setMounted] = useState(false)
   const [copied, setCopied] = useState(false)
   const [internalHover, setInternalHover] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const handleCopy = (e: React.MouseEvent, text: string) => {
     e.stopPropagation()
@@ -258,30 +272,42 @@ export function ExcalidrawCard({
         onMouseLeave?.()
       }}
       onClick={onClick}
-      className={`group relative rounded-xl transition-all duration-200 cursor-pointer ${
+      className={`group relative rounded-xl transition-all duration-300 cursor-pointer ${
         highlightState
-          ? 'scale-[1.008] -translate-y-0.5 z-20'
+          ? 'scale-[1.008] -translate-y-0.5 z-20 shadow-[0_0_24px_rgba(239,68,68,0.12)]'
           : 'hover:scale-[1.004]'
       } ${className}`}
     >
+      {/* Corner notch pins — precision blueprint style matching landing page */}
+      {['-top-1 -left-1', '-top-1 -right-1', '-bottom-1 -left-1', '-bottom-1 -right-1'].map((pos) => (
+        <span
+          key={pos}
+          className={`absolute size-1.5 rounded-[1px] border pointer-events-none z-30 transition-all duration-300 ${
+            highlightState
+              ? 'border-[#ef4444] bg-[#ef4444]/30 scale-125'
+              : 'border-foreground/20 dark:border-white/25 bg-background dark:bg-black group-hover:border-[#ef4444]/60'
+          } ${pos}`}
+        />
+      ))}
+
       {/* Clean border — dashed by default, solid on hover */}
       <div
-        className="absolute inset-0 rounded-xl pointer-events-none transition-all duration-200"
+        className="absolute inset-0 rounded-xl pointer-events-none transition-all duration-300"
         style={{
           border: highlightState
-            ? `1.5px solid ${accentColor}40`
+            ? `1.5px solid ${accentColor}50`
             : '1px solid var(--border-color, rgba(128,128,128,0.15))',
         }}
       />
 
       {/* Card content */}
-      <div className="relative rounded-xl p-4 sm:p-5 bg-card/60 dark:bg-[#0c1017]/80 overflow-hidden">
+      <div className="relative rounded-xl p-4 sm:p-5 bg-card/60 dark:bg-[#0c1017]/85 overflow-hidden">
         {/* Subtle left accent bar */}
         <div
           className="absolute left-0 top-3 bottom-3 w-[2px] rounded-full transition-opacity duration-200"
           style={{
             backgroundColor: accentColor,
-            opacity: highlightState ? 0.6 : 0.15,
+            opacity: highlightState ? 0.7 : 0.2,
           }}
         />
 
@@ -290,7 +316,7 @@ export function ExcalidrawCard({
           <div className="flex items-center gap-2.5 min-w-0">
             {stepNumber && (
               <span
-                className="flex items-center justify-center w-6 h-6 rounded-full text-[10px] font-mono font-bold shrink-0 border"
+                className="flex items-center justify-center w-6 h-6 rounded-full text-[10px] font-mono font-bold shrink-0 border transition-transform group-hover:scale-105"
                 style={{
                   color: accentColor,
                   borderColor: `${accentColor}40`,
@@ -303,9 +329,9 @@ export function ExcalidrawCard({
 
             {Icon && (
               <div
-                className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
+                className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-transform group-hover:scale-105"
                 style={{
-                  backgroundColor: `${accentColor}10`,
+                  backgroundColor: `${accentColor}12`,
                   color: accentColor,
                 }}
               >
@@ -315,9 +341,24 @@ export function ExcalidrawCard({
 
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-semibold text-sm text-foreground tracking-tight">
-                  {title}
-                </span>
+                {mounted && (roughType || (highlightState && !subtitle)) ? (
+                  <RoughNotation
+                    type={roughType ?? 'underline'}
+                    show={highlightState}
+                    color={roughColor || accentColor || '#ef4444'}
+                    strokeWidth={1.5}
+                    padding={roughType === 'circle' ? 6 : [1, 3]}
+                    animationDuration={500}
+                  >
+                    <span className="font-semibold text-sm text-foreground tracking-tight">
+                      {title}
+                    </span>
+                  </RoughNotation>
+                ) : (
+                  <span className="font-semibold text-sm text-foreground tracking-tight">
+                    {title}
+                  </span>
+                )}
                 {isSimulated && (
                   <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-wider bg-rose-500/15 text-rose-400 border border-rose-500/30">
                     Live
@@ -463,7 +504,14 @@ export function ExcalidrawCanvas({
   }
 
   return (
-    <div className="my-8 rounded-xl border border-border/60 dark:border-white/8 bg-muted/20 dark:bg-[#080b10]/60 p-4 sm:p-5 relative overflow-hidden">
+    <div className="my-8 rounded-2xl border border-border/70 dark:border-white/10 bg-muted/20 dark:bg-[#06080c]/80 p-4 sm:p-6 relative">
+      {/* Corner notch pins — landing page precision aesthetic */}
+      {['-top-1 -left-1', '-top-1 -right-1', '-bottom-1 -left-1', '-bottom-1 -right-1'].map((pos) => (
+        <span
+          key={pos}
+          className={`absolute size-2 rounded-[1px] border border-foreground/25 dark:border-white/25 bg-background dark:bg-black pointer-events-none z-20 ${pos}`}
+        />
+      ))}
       {/* Subtle dot grid background */}
       <div
         className="absolute inset-0 pointer-events-none opacity-[0.03] dark:opacity-[0.06]"
