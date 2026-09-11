@@ -1,0 +1,92 @@
+---
+title: Telemetry Intelligence & Adaptive Sampling
+description: Dynamic tail sampling, post-deploy change boost, and incident-window 100% trace capture without ballooning ClickHouse storage costs.
+keywords:
+  - telemetry intelligence
+  - adaptive sampling
+  - tail sampling
+  - otel collector processor
+  - change boost
+  - trace retention
+---
+
+Retaining 100% of distributed traces across modern microservices is cost-prohibitive and overwhelms ClickHouse storage. Conversely, uniform probabilistic sampling (e.g. 1%) inevitably drops the rare p99 latency spikes and intermittent error traces needed to diagnose outages.
+
+Evolvex solves this with **Telemetry Intelligence**—an adaptive sampling control plane that dynamically adjusts collection rates in response to deployments and active investigations.
+
+<TelemetryIntelligenceFlow />
+
+## The three adaptive sampling states
+
+| State | Sample Rate | Trigger Condition | Duration |
+| :--- | :--- | :--- | :--- |
+| **1. Baseline State** | 5% – 10% | Normal steady-state operation. | Continuous |
+| **2. Change Boost** | 50% – 80% | Inbound GitHub push, K8s rollout, or CI/CD stage webhook. | 20 minutes post-deploy |
+| **3. Incident Lock** | **100%** | SigNoz alert webhook received; active investigation case open. | Entire incident window until resolution |
+
+### 1. Baseline state
+Under nominal conditions, the OpenTelemetry collector samples a small percentage of successful HTTP 200 traces while preserving 100% of unhandled 5xx errors. This keeps ingestion bandwidth lean.
+
+### 2. Post-deploy change boost
+Most production regressions happen within minutes of a new release. When Evolvex receives a GitHub push webhook or CI/CD deploy event, it raises the sampling rate for the target `service.name` to ensure immediate visibility into code regressions before user impact escalates.
+
+### 3. Incident lock
+When a SigNoz alert fires and an investigation opens, Evolvex locks the sampling rate to **100%** for all affected services. Every span, log line, and database query during the incident is retained in SigNoz, providing the investigation pipeline with complete causal evidence.
+
+## Collector integration & Go processor
+
+Evolvex provides a specialized OpenTelemetry Collector component: `collector/evolvexattributesprocessor/`.
+
+### Configuration in OpenTelemetry Collector
+
+```yaml
+processors:
+  evolvexattributes:
+    endpoint: "https://evolvex-api.ishaandev.co.in/telemetry-intelligence"
+    auth_token: "${EVOLVEX_COLLECTOR_KEY}"
+    sync_interval: 15s
+    default_sample_rate: 0.05
+    error_sample_rate: 1.0
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, evolvexattributes, batch]
+      exporters: [otlp/signoz]
+```
+
+## Policy synchronization API
+
+Collectors poll `/telemetry-intelligence` with a Bearer token (`EVOLVEX_COLLECTOR_KEY`) to receive current sampling weights:
+
+```bash
+curl -X GET "https://evolvex-api.ishaandev.co.in/telemetry-intelligence/sampling-policies" \
+  -H "Authorization: Bearer ${EVOLVEX_COLLECTOR_KEY}"
+```
+
+Example response payload:
+```json
+{
+  "policies": [
+    {
+      "service": "payments-svc",
+      "rate": 1.0,
+      "state": "incident_lock",
+      "activeInvestigationId": "c4a78a10-2b36-4d22-9e8a-e9012f205ab1",
+      "expiresAt": "2026-09-10T19:45:00Z"
+    },
+    {
+      "service": "checkout-api",
+      "rate": 0.5,
+      "state": "change_boost",
+      "commit": "0d1a26e",
+      "expiresAt": "2026-09-10T19:12:00Z"
+    }
+  ]
+}
+```
+
+<Tip>
+  By aligning sampling rates with real-world change events, Telemetry Intelligence reduces ClickHouse storage consumption by up to 78% while guaranteeing 100% trace capture during critical incidents.
+</Tip>
