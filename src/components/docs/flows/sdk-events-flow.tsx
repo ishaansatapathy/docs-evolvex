@@ -18,20 +18,19 @@ export function SdkEventsFlow() {
 
   return (
     <ExcalidrawCanvas
-      title="TypeScript SDK & Custom Timeline Events Architecture"
-      subtitle="Programmatic injection of custom markers, deployment metadata, and AI findings"
+      title="TypeScript SDK & Custom Timeline Events"
+      subtitle="Programmatic injection of custom markers, deployment metadata, and findings"
       onSimulate={handleSimulate}
       isSimulating={isSimulating}
       stepProgress={activeCard === 'cli' ? 'SDK Initialized' : 'Timeline Event Injected'}
     >
-      <div className="flex flex-col md:flex-row items-center justify-between gap-4 max-w-4xl mx-auto">
+      <div className="flex flex-col md:flex-row items-center justify-between gap-3 max-w-4xl mx-auto">
         <div className="w-full md:w-1/2">
           <div className="flex items-center justify-between mb-1.5 px-1">
-            <span className="font-mono text-xs font-semibold text-sky-400 uppercase tracking-wider flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-sky-400" />
-              01 • Application / CLI
+            <span className="font-mono text-[10px] text-muted-foreground/50 uppercase tracking-widest">
+              Application / CLI
             </span>
-            <StickyNote text="@evolvex/sdk" color="#38BDF8" rotation={-1} />
+            <StickyNote text="@evolvex/sdk" />
           </div>
 
           <ExcalidrawCard
@@ -39,11 +38,9 @@ export function SdkEventsFlow() {
             title="Internal CLI / Platform"
             subtitle="import { createEvolvexClient } from '@evolvex/sdk'"
             badge="TypeScript SDK"
-            badgeColor="#38BDF8"
-            accentColor="#38BDF8"
+            badgeColor="#6b93b8"
+            accentColor="#6b93b8"
             icon={Terminal}
-            roughType="box"
-            roughColor="#38BDF8"
             isActive={activeCard === 'cli'}
             isSimulated={isSimulating && activeCard === 'cli'}
             onMouseEnter={() => setActiveCard('cli')}
@@ -53,12 +50,12 @@ export function SdkEventsFlow() {
               note: 'Full type-safety for Node.js, Bun, and Deno.',
             }}
           >
-            <div className="p-2 rounded bg-muted/40 border border-border/70 text-xs font-mono text-muted-foreground mt-1">
+            <div className="px-2 py-1.5 rounded-md bg-muted/20 border border-border/30 text-[11px] font-mono text-muted-foreground/60 mt-1">
               client.investigations.addTimelineEvent(&#123;
               <br />
-              &nbsp;&nbsp;type: &apos;CHANGE&apos;,
+              &nbsp;&nbsp;type: 'CHANGE',
               <br />
-              &nbsp;&nbsp;title: &apos;Canary 10% deployed&apos;
+              &nbsp;&nbsp;title: 'Canary 10% deployed'
               <br />
               &#125;)
             </div>
@@ -67,32 +64,29 @@ export function SdkEventsFlow() {
 
         <HandDrawnArrow
           direction="down"
-          label="Authorization: Bearer Key"
+          label="Bearer Key"
           sublabel="POST /api/v1/sdk/*"
-          color="#00CC66"
+          color="#6b9e6b"
           isActive={true}
-          length={40}
+          length={36}
         />
 
         <div className="w-full md:w-1/2">
           <div className="flex items-center justify-between mb-1.5 px-1">
-            <span className="font-mono text-xs font-semibold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-emerald-400" />
-              02 • Evolvex SDK Gateway
+            <span className="font-mono text-[10px] text-muted-foreground/50 uppercase tracking-widest">
+              SDK Gateway
             </span>
-            <StickyNote text="REST API v1" color="#00CC66" rotation={1} />
+            <StickyNote text="REST API v1" />
           </div>
 
           <ExcalidrawCard
             id="sdk-gateway"
-            title="Evolvex SDK REST Gateway"
+            title="Evolvex SDK Gateway"
             subtitle="Programmatic Case & Timeline Mutation"
-            badge="Authenticated API"
-            badgeColor="#00CC66"
-            accentColor="#00CC66"
+            badge="Authenticated"
+            badgeColor="#6b9e6b"
+            accentColor="#6b9e6b"
             icon={Database}
-            roughType="box"
-            roughColor="#00CC66"
             isActive={activeCard === 'api'}
             isSimulated={isSimulating && activeCard === 'api'}
             onMouseEnter={() => setActiveCard('api')}
@@ -101,12 +95,12 @@ export function SdkEventsFlow() {
               note: 'Injects custom metrics, synthetic test findings, and AI insights.',
             }}
           >
-            <div className="space-y-1 mt-1 text-xs font-mono text-muted-foreground">
-              <div className="p-1.5 rounded bg-muted/40 border border-border/70">
+            <div className="space-y-1 mt-1 text-[11px] font-mono text-muted-foreground/60">
+              <div className="px-2 py-1 rounded-md bg-muted/20 border border-border/30">
                 • List & filter open investigations
               </div>
-              <div className="p-1.5 rounded bg-muted/40 border border-border/70">
-                • Inject CHANGE / METRIC / AI timeline events
+              <div className="px-2 py-1 rounded-md bg-muted/20 border border-border/30">
+                • Inject CHANGE / METRIC / AI events
               </div>
             </div>
           </ExcalidrawCard>
