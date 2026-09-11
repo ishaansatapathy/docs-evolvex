@@ -150,6 +150,15 @@ export function SiteShell({
     )?.id ?? activeCollection.id
   const relocatedGithubHref = navbarConfig?.links?.find((link) => link.type === 'github')?.href
 
+  // When viewing the custom landing homepage, render children directly without docs chrome
+  if (currentPath === '/' || pathname === '/') {
+    return (
+      <SiteNameProvider initialName={identity.name}>
+        {children}
+      </SiteNameProvider>
+    )
+  }
+
   // `clip` contains horizontal spill without creating a scroll container,
   // which lets the banner-aware desktop sidebar remain sticky.
   return (
