@@ -54,6 +54,7 @@ export function EbpfObiFlow() {
             badge="RingBuffer"
             badgeColor="#6b9e6b"
             accentColor="#6b9e6b"
+            roughType="underline"
             icon={Cpu}
             seed={101}
             isActive={activeStep === 1}
@@ -91,34 +92,37 @@ obi_stat_skb_drop_reason`,
         <div className="flex-1 min-w-[260px] max-w-[300px] flex flex-col">
           <div className="flex items-center justify-between mb-1.5 px-1">
             <span className="font-mono text-[10px] text-muted-foreground/50 uppercase tracking-widest">
-              User Space OTel
+              Telemetry Pipeline
             </span>
-            <StickyNote text="ClickHouse metrics" />
+            <StickyNote text="SigNoz Collector" color="#6b93b8" />
           </div>
 
           <ExcalidrawCard
-            id="signoz-obi"
+            id="collector"
             title="SigNoz Collector"
-            subtitle="DaemonSet on Port 4317"
+            subtitle="Batching & Compression"
             stepNumber="02"
-            badge="ClickHouse"
-            badgeColor="#c2716b"
-            accentColor="#c2716b"
-            icon={Flame}
-            seed={202}
+            badge="gRPC Ingest"
+            badgeColor="#6b93b8"
+            accentColor="#6b93b8"
+            roughType="box"
+            icon={Radio}
+            seed={102}
             isActive={activeStep === 2}
             isSimulated={activeStep === 2}
             details={{
-              protocol: 'OTLP Receiver over gRPC',
-              endpoint: 'signoz-otel-collector.signoz:4317',
-              note: 'Stores OBI time-series metrics directly in ClickHouse.',
+              endpoint: 'signoz-otel-collector:4317',
+              protocol: 'OTLP / gRPC + snappy',
+              note: 'Batches kernel events into 5s windows before ClickHouse flush.',
             }}
           >
-            <div className="px-2 py-1.5 rounded-md bg-muted/20 border border-border/30 text-[11px] font-mono text-muted-foreground/60 mt-1">
-              <span className="text-foreground/70 font-medium">Metric:</span>{' '}
-              obi_stat_tcp_rtt_seconds
-              <br />
-              <span className="text-foreground/70 font-medium">Granularity:</span> 10s buckets
+            <div className="space-y-1 mt-1.5 text-[11px] font-mono text-muted-foreground/60">
+              <div className="px-2 py-1.5 rounded-md bg-muted/20 border border-border/30">
+                <span className="text-foreground/70 font-medium">batch:</span> 8192 spans / 5s
+              </div>
+              <div className="px-2 py-1.5 rounded-md bg-muted/20 border border-border/30">
+                <span className="text-foreground/70 font-medium">memory_limiter:</span> 512MiB ceiling
+              </div>
             </div>
           </ExcalidrawCard>
         </div>
@@ -126,8 +130,8 @@ obi_stat_skb_drop_reason`,
         <HandDrawnArrow
           direction="right"
           label="Query API v5"
-          sublabel="temporal correlation"
-          color="#6b9e6b"
+          sublabel="traces + kfree_skb"
+          color="#9b7db8"
           isActive={activeStep === 2 || activeStep === 3}
           length={40}
         />
@@ -136,19 +140,20 @@ obi_stat_skb_drop_reason`,
         <div className="flex-1 min-w-[260px] max-w-[300px] flex flex-col">
           <div className="flex items-center justify-between mb-1.5 px-1">
             <span className="font-mono text-[10px] text-muted-foreground/50 uppercase tracking-widest">
-              Incident OS
+              Correlation Engine
             </span>
-            <StickyNote text="infrastructure RCA" />
+            <StickyNote text="eBPF + trace match" color="#9b7db8" />
           </div>
 
           <ExcalidrawCard
             id="evolvex-kernel"
-            title="Evolvex Correlation"
-            subtitle="Kernel vs App Disambiguation"
+            title="Evolvex Correlator"
+            subtitle="Socket Drop Pinpointing"
             stepNumber="03"
-            badge="RCA Verified"
-            badgeColor="#6b9e6b"
-            accentColor="#6b9e6b"
+            badge="Temporal Match"
+            badgeColor="#9b7db8"
+            accentColor="#9b7db8"
+            roughType="circle"
             icon={ShieldAlert}
             seed={303}
             isActive={activeStep === 3}
