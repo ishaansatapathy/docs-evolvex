@@ -17,6 +17,8 @@ import {
   CheckCircle2,
   Search,
   Zap,
+  ExternalLink,
+  Github,
 } from 'lucide-react'
 import { RoughNotation, RoughNotationGroup } from 'react-rough-notation'
 import { Highlight } from '@/components/ui/highlight'
@@ -350,7 +352,23 @@ export function EvolvexLanding() {
           </div>
 
           {/* Right: Actions */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3 md:gap-4">
+            <a
+              href="https://evolvex.ishaandev.co.in"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hidden sm:inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-widest text-[#ef4444] hover:text-[#ff6b6b] transition-colors"
+            >
+              Live Console <ExternalLink className="size-3" />
+            </a>
+            <a
+              href="https://github.com/ishaansatapathy/EvolveX"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hidden lg:inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest text-white/50 hover:text-white transition-colors"
+            >
+              <Github className="size-3.5" /> GitHub
+            </a>
             <a
               href="/api/introduction"
               className="hidden sm:block text-xs font-semibold uppercase tracking-widest text-white/50 hover:text-white transition-colors"
@@ -458,18 +476,28 @@ export function EvolvexLanding() {
           </div>
 
           {/* Action CTAs */}
-          <div className="mt-12 flex flex-wrap justify-center gap-4">
+          <div className="mt-12 flex flex-wrap justify-center items-center gap-4">
+            <a
+              href="https://evolvex.ishaandev.co.in"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex h-12 items-center gap-2 rounded-full bg-[#ef4444] px-7 text-sm font-bold text-white transition-all hover:bg-[#dc2626] hover:scale-[1.02] shadow-xl shadow-red-500/20"
+            >
+              Visit Live Console <ExternalLink className="size-4" />
+            </a>
             <a
               href="/quickstart"
-              className="inline-flex h-12 items-center gap-2 rounded-full bg-white px-8 text-sm font-bold text-black transition-all hover:bg-white/90 hover:scale-[1.02] shadow-xl shadow-white/10"
+              className="inline-flex h-12 items-center gap-2 rounded-full bg-white px-7 text-sm font-bold text-black transition-all hover:bg-white/90 hover:scale-[1.02] shadow-xl shadow-white/10"
             >
               Start Quickstart <ArrowRight className="size-4" />
             </a>
             <a
-              href="#capabilities"
-              className="inline-flex h-12 items-center gap-2 rounded-full border border-white/15 bg-white/[0.04] px-8 text-sm font-bold text-white transition-all hover:bg-white/10 hover:border-white/30 backdrop-blur-md"
+              href="https://github.com/ishaansatapathy/EvolveX"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex h-12 items-center gap-2 rounded-full border border-white/15 bg-white/[0.04] px-6 text-sm font-bold text-white transition-all hover:bg-white/10 hover:border-white/30 backdrop-blur-md"
             >
-              View Architecture
+              <Github className="size-4" /> GitHub
             </a>
           </div>
         </motion.div>
@@ -787,7 +815,15 @@ export function EvolvexLanding() {
                   Modern investigation for modern engineering teams.
                 </h3>
 
-                <div className="pt-8 flex flex-wrap justify-center gap-4">
+                <div className="pt-8 flex flex-wrap justify-center items-center gap-4">
+                  <a
+                    href="https://evolvex.ishaandev.co.in"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex h-12 items-center gap-2 rounded-full bg-[#ef4444] px-8 text-sm font-bold text-white transition-all hover:bg-[#dc2626] hover:scale-[1.02] shadow-xl shadow-red-500/20"
+                  >
+                    Visit Live Console <ExternalLink className="size-4" />
+                  </a>
                   <a
                     href="/quickstart"
                     className="inline-flex h-12 items-center gap-2 rounded-full bg-white px-8 text-sm font-bold text-black transition-all hover:bg-white/90 hover:scale-[1.02] shadow-xl shadow-white/10"
@@ -795,10 +831,12 @@ export function EvolvexLanding() {
                     Read Documentation <ArrowRight className="size-4" />
                   </a>
                   <a
-                    href="/api/introduction"
-                    className="inline-flex h-12 items-center gap-2 rounded-full border border-white/15 bg-white/[0.04] px-8 text-sm font-bold text-white transition-all hover:bg-white/10 hover:border-white/30 backdrop-blur-md"
+                    href="https://github.com/ishaansatapathy/EvolveX"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex h-12 items-center gap-2 rounded-full border border-white/15 bg-white/[0.04] px-7 text-sm font-bold text-white transition-all hover:bg-white/10 hover:border-white/30 backdrop-blur-md"
                   >
-                    API Reference
+                    <Github className="size-4" /> Star on GitHub
                   </a>
                 </div>
               </motion.div>
@@ -808,19 +846,45 @@ export function EvolvexLanding() {
       </section>
 
       {/* Footer */}
-      <footer className="relative z-20 py-24 px-5 md:px-20 border-t border-white/5 bg-[#020202]">
-        <div className="mx-auto max-w-7xl flex flex-col md:flex-row justify-between items-center gap-12">
-          <div className="flex flex-col md:flex-row items-center gap-10">
-            <CinematicLogo size={32} showText={true} />
-            <div className="hidden md:block h-6 w-[1px] bg-white/10" />
-            <div className="flex gap-8 text-[10px] font-black uppercase tracking-[0.3em] text-white/30">
-              <span className="text-white/40 italic font-handwriting text-2xl normal-case tracking-normal">
-                &quot;Build for the builders&quot;
-              </span>
+      <footer className="relative z-20 py-20 px-5 md:px-20 border-t border-white/5 bg-[#020202]">
+        <div className="mx-auto max-w-7xl flex flex-col gap-10">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-8">
+            <div className="flex flex-col md:flex-row items-center gap-6 md:gap-10">
+              <CinematicLogo size={32} showText={true} />
+              <div className="hidden md:block h-6 w-[1px] bg-white/10" />
+              <div className="flex gap-8 text-[10px] font-black uppercase tracking-[0.3em] text-white/30">
+                <span className="text-white/40 italic font-handwriting text-2xl normal-case tracking-normal">
+                  &quot;Build for the builders&quot;
+                </span>
+              </div>
+            </div>
+
+            {/* Quick Links */}
+            <div className="flex flex-wrap justify-center items-center gap-6 text-xs text-white/50">
+              <a
+                href="https://evolvex.ishaandev.co.in"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[#ef4444] hover:text-[#ff6b6b] flex items-center gap-1 font-medium transition-colors"
+              >
+                Live Console <ExternalLink className="size-3" />
+              </a>
+              <a
+                href="https://github.com/ishaansatapathy/EvolveX"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-white flex items-center gap-1 transition-colors"
+              >
+                <Github className="size-3" /> GitHub
+              </a>
+              <a href="/quickstart" className="hover:text-white transition-colors">Quickstart</a>
+              <a href="/guides/architecture" className="hover:text-white transition-colors">Architecture</a>
+              <a href="/guides/signoz-setup" className="hover:text-white transition-colors">SigNoz Setup</a>
+              <a href="/api/introduction" className="hover:text-white transition-colors">API Reference</a>
             </div>
           </div>
 
-          <div className="flex flex-col items-center md:items-end gap-3">
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-6 border-t border-white/5">
             <p className="text-[10px] uppercase tracking-[0.35em] text-white/30 font-bold">
               © 2026 Evolvex OS — Autonomous Investigation on SigNoz
             </p>
