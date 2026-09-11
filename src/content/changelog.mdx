@@ -1,15 +1,45 @@
 ---
 title: Changelog
-description: Record product changes that alter how readers use the documented experience.
+description: Release history, major feature launches, and architectural milestones for Evolvex.
+keywords:
+  - changelog
+  - release notes
+  - version history
+  - updates
 ---
 
-## v0.1.0
+<Update label="v1.0.0" date="2026-09-10" title="Production Release (Hackathon Launch)" tags={["SigNoz", "OpenTelemetry", "eBPF", "Kubernetes", "MCP"]}>
 
-The first published version of this documentation.
+The official production release of **Evolvex (Autonomous Incident Investigation OS on SigNoz)**.
 
-- A task-focused introduction and quickstart
-- Browsable API documentation generated from `openapi.yaml`
-- Agent-readable discovery files and a read-only MCP endpoint
+### Core Investigation Engine
+- **Autonomous 6-Stage Investigation Pipeline:** Ingestion, Context Enqueue, Trace Analysis, Log Correlation, Deploy Match, and Timeline Assembly with strict zero-fake-data fidelity.
+- **Evidence-First AI Synthesis:** Root-cause narrative generation strictly constrained to live timeline citations (`[T1]`, `[E1]`) to prevent LLM hallucinations.
+- **GitHub Deploy Pinpointing:** Correlation of error stack traces with recent git commit diffs down to exact `file:line` locations.
 
-Replace this entry with changes your readers need to understand. Lead with the
-impact, then link to the guide or reference that explains the new behavior.
+### Integrations & Webhook Ingestion
+- **SigNoz 3-Key Architecture:** Scoped Ingestion Key, Query API v5 API Key (Editor/Admin), and per-workspace Basic Auth Webhook Password.
+- **Kubernetes Cluster Monitoring:** Official `helm/evolvex-agent` chart with automated 30s heartbeats, pod lifecycle tracking, and `OOMKilled` / `CrashLoopBackOff` correlation.
+- **Collaboration Outbound Channels:** "Add to Slack" OAuth integration for automated incident readiness broadcasts, and 1-click Jira ticket creation directly from investigation cases.
+- **CI/CD & Feature Flags:** Dedicated `/webhooks/cicd` (GitHub Actions & GitLab CI workflow runs and test retry chains) and `/webhooks/feature-flags` (LaunchDarkly & Unleash flag flips).
+- **Extensible Plugin Hub:** Dynamic `/webhooks/plugins/:pluginId` supporting Prometheus Alertmanager, Datadog Import, Security Scanner (CVEs & S3 bucket leaks), and generic custom JSON events.
+
+### Developer Tools & Observability
+- **Official TypeScript SDK:** Published `@evolvex/sdk` providing promise-based investigation listing, timeline event injection, metadata attachment, and `pnpm sdk:demo`.
+- **Automated Postmortem Generation:** CLI tool `pnpm signoz:postmortem-pack` extracting 60-minute window alert history, p99 spikes, and logs into clean Markdown reports.
+- **SigNoz Dashboard Automation:** Programmatic 3-widget dashboard provisioning (`pnpm signoz:dashboard-setup`) via SigNoz Dashboards API (`POST /api/v1/dashboards`).
+- **Linux eBPF / OBI Integration:** Kernel socket probes tracking TCP RTT anomalies (`obi_stat_tcp_rtt_seconds`) and packet drop correlation.
+- **Model Context Protocol (MCP):** Remote and local MCP server integration enabling Claude Code and Cursor to query Evolvex telemetry conversationally.
+
+</Update>
+
+<Update label="v0.9.0" date="2026-08-15" title="Beta Release" tags={["SigNoz Query v5", "AES-256 Vault"]}>
+
+Initial private beta of the SigNoz incident investigation engine.
+
+- **SigNoz Query API v5 Integration:** Direct trace span and ClickHouse log querying.
+- **Multi-Tenant Vault:** AES-256-GCM encrypted credentials with indexed SHA-256 `secret_hash` lookup for $O(1)$ tenant resolution.
+- **Evidence Timeline:** Unified chronological timeline with `ALERT`, `TRACE`, `LOG`, `DEPLOY`, and `METRIC` event kinds.
+- **Self-Observability:** Dogfooding instrumentation exporting `evolvex-api` traces and metrics into SigNoz.
+
+</Update>
