@@ -1,0 +1,229 @@
+---
+title: SigNoz & OpenTelemetry Setup
+description: Complete guide to instrumenting applications with OpenTelemetry, configuring SigNoz Cloud or Foundry, and routing alert webhooks into Evolvex.
+keywords:
+  - signoz setup
+  - opentelemetry sdk
+  - otel nodejs
+  - otel python
+  - otel go
+  - signoz alert rules
+  - notification channel
+---
+
+Evolvex is an **investigation operating system on top of SigNoz**. Your applications send OpenTelemetry (OTel) signals directly to SigNoz, SigNoz evaluates threshold rules against your live telemetry, and fired alert webhooks automatically trigger root-cause investigations in Evolvex.
+
+<QuickstartFlow />
+
+---
+
+## 1. The three SigNoz keys explained
+
+Never confuse these three credentials—each lives in a different component:
+
+| Credential | Where to paste it | Purpose | Required Role |
+| :--- | :--- | :--- | :--- |
+| **Ingestion Key** | In your **application shell / `.env`** (`SIGNOZ_INGESTION_KEY`) | Authenticates OTLP traces, logs, and metrics sent **to** SigNoz. | Ingestion scope |
+| **API Key** | In **Evolvex Settings → SigNoz** | Allows Evolvex to **read** traces and logs via Query API v5 when investigating an incident. | **Editor** or **Admin** |
+| **Webhook Password** | In your **SigNoz Notification Channel** (Basic Auth) | Authenticates inbound alerts and routes them to your isolated Evolvex workspace. | Unique workspace secret |
+
+---
+
+## 2. Setting up SigNoz (Telemetry Data Plane)
+
+### Option A: SigNoz Cloud (Fastest)
+1. Sign in to your [SigNoz Cloud](https://signoz.io/teams/) organization (e.g. `https://your-org.in2.signoz.cloud`).
+2. Go to **Settings → Ingestion**:
+   - Copy the **Ingestion Key**.
+   - Copy the **OTLP HTTP URL** (e.g. `https://ingest.in2.signoz.cloud`).
+3. Go to **Settings → API Keys**:
+   - Click **Create API Key**.
+   - Name it `Evolvex-Reader` and select the **Editor** or **Admin** role (required for querying rules and building dashboards).
+
+### Option B: Self-Hosted with Foundry
+The Evolvex repository ships with `casting.yaml` for a reproducible self-hosted setup:
+
+```bash
+# Launch SigNoz and native MCP server
+pnpm signoz:local:up
+
+# Check container status
+pnpm signoz:local:status
+```
+
+- **Web UI:** `http://localhost:8080`
+- **OTLP Ingestion:** `http://localhost:4318`
+
+---
+
+## 3. Instrumenting your application with OpenTelemetry
+
+Every language requires the same three environment variables:
+
+```bash
+export SIGNOZ_INGESTION_KEY="your-ingestion-key-from-signoz"
+export SIGNOZ_INGESTION_URL="https://ingest.in2.signoz.cloud" # without trailing slash!
+export OTEL_SERVICE_NAME="payments-svc"                      # must match alert rule filter
+```
+
+<Tabs>
+  <Tab title="Node.js / TypeScript">
+    ### Install OpenTelemetry packages
+    ```bash
+    npm install @opentelemetry/sdk-node \
+      @opentelemetry/auto-instrumentations-node \
+      @opentelemetry/exporter-trace-otlp-http \
+      @opentelemetry/exporter-metrics-otlp-http \
+      @opentelemetry/sdk-metrics
+    ```
+
+    ### Create `instrumentation.ts`
+    ```typescript
+    // instrumentation.ts — must run before your application imports
+    import { NodeSDK } from "@opentelemetry/sdk-node";
+    import { getNodeAutoInstrumentations } from "@opentelemetry/auto-instrumentations-node";
+    import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
+    import { OTLPMetricExporter } from "@opentelemetry/exporter-metrics-otlp-http";
+    import { PeriodicExportingMetricReader } from "@opentelemetry/sdk-metrics";
+
+    const baseUrl = (process.env.SIGNOZ_INGESTION_URL ?? "https://ingest.in2.signoz.cloud").replace(/\/+$/, "");
+    const key = process.env.SIGNOZ_INGESTION_KEY!;
+
+    const sdk = new NodeSDK({
+      serviceName: process.env.OTEL_SERVICE_NAME ?? "payments-svc",
+      traceExporter: new OTLPTraceExporter({
+        url: `${baseUrl}/v1/traces`,
+        headers: { "signoz-ingestion-key": key },
+      }),
+      metricReader: new PeriodicExportingMetricReader({
+        exporter: new OTLPMetricExporter({
+          url: `${baseUrl}/v1/metrics`,
+          headers: { "signoz-ingestion-key": key },
+        }),
+      }),
+      instrumentations: [getNodeAutoInstrumentations()],
+    });
+
+    sdk.start();
+    ```
+
+    ### Sample Express server (`server.ts`)
+    ```typescript
+    import express from "express";
+
+    const app = express();
+
+    app.get("/checkout", (_req, res) => {
+      // Simulate intermittent redis failure for alerts
+      if (Math.random() < 0.1) {
+        throw new Error("Redis connection timeout at checkout");
+      }
+      res.json({ status: "ok" });
+    });
+
+    app.listen(3000, () => console.log("Server running on :3000"));
+    ```
+
+    ### Run with pre-load
+    ```bash
+    node --require ./instrumentation.js server.js
+    ```
+  </Tab>
+
+  <Tab title="Python (FastAPI)">
+    ### Install dependencies
+    ```bash
+    pip install opentelemetry-distro opentelemetry-exporter-otlp \
+      fastapi uvicorn opentelemetry-instrumentation-fastapi
+    ```
+
+    ### Run with automated auto-instrumentation
+    ```bash
+    export OTEL_EXPORTER_OTLP_ENDPOINT="${SIGNOZ_INGESTION_URL}"
+    export OTEL_EXPORTER_OTLP_HEADERS="signoz-ingestion-key=${SIGNOZ_INGESTION_KEY}"
+    export OTEL_TRACES_EXPORTER=otlp
+    export OTEL_METRICS_EXPORTER=otlp
+
+    opentelemetry-instrument uvicorn main:app --host 0.0.0.0 --port 8000
+    ```
+  </Tab>
+
+  <Tab title="Go">
+    ### Install Go OTel exporters
+    ```bash
+    go get go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp
+    go get go.opentelemetry.io/otel/sdk/trace
+    ```
+
+    ### Configure OTLP HTTP batcher
+    ```go
+    endpoint := os.Getenv("SIGNOZ_INGESTION_URL") + "/v1/traces"
+    exporter, _ := otlptracehttp.New(ctx,
+        otlptracehttp.WithEndpointURL(endpoint),
+        otlptracehttp.WithHeaders(map[string]string{
+            "signoz-ingestion-key": os.Getenv("SIGNOZ_INGESTION_KEY"),
+        }),
+    )
+    tp := trace.NewTracerProvider(trace.WithBatcher(exporter))
+    otel.SetTracerProvider(tp)
+    ```
+  </Tab>
+
+  <Tab title="Evolvex Load Generator (No App Needed)">
+    If you don't have an application ready to instrument, emit real OTLP traces using Evolvex's built-in generator:
+
+    ```bash
+    # Tail latency load batch
+    pnpm signoz:p99
+
+    # Continuous background load with periodic error spikes
+    pnpm signoz:loadgen
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## 4. Connecting Evolvex to your SigNoz backend
+
+1. Open the hosted Evolvex console at `https://evolvex.ishaandev.co.in`.
+2. Navigate to **Settings → Connect integrations → SigNoz**.
+3. Fill in:
+   - **Cloud URL:** `https://your-org.in2.signoz.cloud` (or `http://localhost:8080` for Foundry)
+   - **API Key:** Paste your Editor/Admin API key.
+4. Click **Save SigNoz** → **Test Connection**. You should see `SigNoz API connected`.
+5. Click **Generate webhook credentials**. Copy the three fields:
+   - **Webhook URL:** `https://evolvex-api.ishaandev.co.in/webhooks/signoz`
+   - **Username:** `evolvex`
+   - **Password:** `<your-unique-workspace-password>`
+
+---
+
+## 5. Configuring the SigNoz notification channel & alert rule
+
+### Create the webhook channel in SigNoz
+1. In SigNoz, navigate to **Alerts → Notification Channels → + New Channel**.
+2. Select **Webhook**.
+3. Set the fields:
+   - **Name:** `EvolveX-Alerts`
+   - **URL:** `https://evolvex-api.ishaandev.co.in/webhooks/signoz`
+   - **Username:** `evolvex`
+   - **Password:** Paste your unique workspace password.
+4. Click **Save Channel**.
+
+### Create the alert rule
+1. Navigate to **Alerts → Alert Rules → + New Alert**.
+2. Configure:
+   - **Alert Name:** `p99 latency spike — payments-svc`
+   - **Query Filter:** `service.name = 'payments-svc'`
+   - **Condition:** p99 latency > 800ms (or error rate > 0)
+   - **For:** 1 minute
+   - **Notification Channel:** Select `EvolveX-Alerts`.
+3. Save the rule.
+
+<Tip>
+  Alternatively, create standard alert rules automatically using the CLI:
+  ```bash
+  pnpm signoz:alert-setup -- --channel EvolveX-Alerts
+  ```
+</Tip>
