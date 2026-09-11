@@ -148,9 +148,9 @@ export function ArchitectureFlow() {
                 <div
                   key={source.id}
                   onMouseEnter={() => setSelectedSource(source.id)}
-                  className={`group p-2.5 rounded-xl border transition-all duration-200 cursor-pointer flex flex-col justify-between ${
+                  className={`group relative p-2.5 rounded-xl border transition-all duration-300 cursor-pointer flex flex-col justify-between ${
                     isSelected || isSimulated
-                      ? 'bg-card/80 border-transparent shadow-sm scale-[1.01] -translate-y-0.5'
+                      ? 'bg-card/90 border-transparent shadow-sm scale-[1.02] -translate-y-0.5'
                       : 'bg-card/40 border-border/40 dark:border-white/6 hover:bg-card/60'
                   }`}
                   style={{
@@ -159,6 +159,17 @@ export function ArchitectureFlow() {
                       : undefined,
                   }}
                 >
+                  {/* Corner notch pins — landing page precision touch */}
+                  {['-top-0.5 -left-0.5', '-top-0.5 -right-0.5', '-bottom-0.5 -left-0.5', '-bottom-0.5 -right-0.5'].map((pos) => (
+                    <span
+                      key={pos}
+                      className={`absolute size-1 rounded-[0.5px] border pointer-events-none z-20 transition-all duration-300 ${
+                        isSelected || isSimulated
+                          ? 'border-[#ef4444] bg-[#ef4444]/40 scale-110'
+                          : 'border-foreground/15 dark:border-white/20 bg-background dark:bg-black group-hover:border-[#ef4444]/50'
+                      } ${pos}`}
+                    />
+                  ))}
                   <div>
                     <div className="flex items-center justify-between gap-1 mb-1.5">
                       <div
@@ -218,6 +229,7 @@ export function ArchitectureFlow() {
             badge="AES-256-GCM"
             badgeColor="#6b9e6b"
             accentColor="#6b9e6b"
+            roughType="underline"
             icon={ShieldCheck}
             seed={811}
             isActive={simStep === 2}
@@ -283,6 +295,7 @@ export function ArchitectureFlow() {
             badge="Relational Schema"
             badgeColor="#6b93b8"
             accentColor="#6b93b8"
+            roughType="box"
             icon={Database}
             seed={822}
             isActive={simStep === 3}
@@ -338,6 +351,7 @@ export function ArchitectureFlow() {
             badge="Customer UI"
             badgeColor="#9b7db8"
             accentColor="#9b7db8"
+            roughType="circle"
             icon={Laptop}
             seed={833}
             isActive={simStep === 4}
