@@ -324,6 +324,27 @@ export function EvolvexLanding() {
           max-width: 100% !important;
         }
 
+        /* Completely eliminate outer Thally footer and any trailing chrome on landing page */
+        html:has(.thread-page) .thally-docs-shell > div > footer,
+        html:has(.thread-page) .thally-docs-shell footer,
+        html:has(.thread-page) footer:not(.thread-page footer),
+        body:has(.thread-page) .thally-docs-shell > div > footer,
+        body:has(.thread-page) .thally-docs-shell footer,
+        body:has(.thread-page) footer:not(.thread-page footer),
+        body.evolvex-landing-active .thally-docs-shell > div > footer,
+        body.evolvex-landing-active .thally-docs-shell footer,
+        body.evolvex-landing-active footer:not(.thread-page footer) {
+          display: none !important;
+          height: 0 !important;
+          min-height: 0 !important;
+          max-height: 0 !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          border: none !important;
+          visibility: hidden !important;
+          overflow: hidden !important;
+        }
+
         html:has(.thread-page) #main-content > div,
         body:has(.thread-page) #main-content > div,
         body.evolvex-landing-active #main-content > div {
@@ -1002,7 +1023,9 @@ export function EvolvexLanding() {
               <a href="/quickstart" className="hover:text-white transition-colors">Quickstart</a>
               <a href="/guides/architecture" className="hover:text-white transition-colors">Architecture</a>
               <a href="/guides/signoz-setup" className="hover:text-white transition-colors">SigNoz Setup</a>
+              <a href="/guides/kubernetes" className="hover:text-white transition-colors">Kubernetes</a>
               <a href="/api/introduction" className="hover:text-white transition-colors">API Reference</a>
+              <a href="/changelog" className="hover:text-white transition-colors">Changelog</a>
             </div>
           </div>
 
