@@ -363,7 +363,7 @@ export function EvolvexLanding() {
       {/* Background Image with Radial Vignette */}
       <div className="fixed inset-0 h-screen w-screen overflow-hidden pointer-events-none z-0">
         <img
-          src="/hero-bg.png?v=2"
+          src="/hero-incident-bg.png"
           alt=""
           className="h-full w-full object-cover opacity-85 contrast-105 brightness-90"
         />
