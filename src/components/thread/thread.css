@@ -41,6 +41,27 @@ body.evolvex-landing-active #main-content > div {
   max-width: 100% !important;
 }
 
+/* Completely eliminate outer Thally footer and any trailing chrome on landing page */
+html:has(.thread-page) .thally-docs-shell > div > footer,
+html:has(.thread-page) .thally-docs-shell footer,
+html:has(.thread-page) footer:not(.thread-page footer),
+body:has(.thread-page) .thally-docs-shell > div > footer,
+body:has(.thread-page) .thally-docs-shell footer,
+body:has(.thread-page) footer:not(.thread-page footer),
+body.evolvex-landing-active .thally-docs-shell > div > footer,
+body.evolvex-landing-active .thally-docs-shell footer,
+body.evolvex-landing-active footer:not(.thread-page footer) {
+  display: none !important;
+  height: 0 !important;
+  min-height: 0 !important;
+  max-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  visibility: hidden !important;
+  overflow: hidden !important;
+}
+
 .thread-page {
   --thread-bg: #000000;
   --thread-surface: #050505;
