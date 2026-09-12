@@ -154,7 +154,93 @@ class LocalAiService implements AiService {
 
       const sourcesHeader = serializeAiAnswerSources(sources)
 
-      // 2. Check for Anthropic API key if provided
+      // 2. Check for OpenAI API key if provided
+      const openaiKey = process.env.OPENAI_API_KEY
+      if (openaiKey) {
+        try {
+          const docsContext = hits
+            .map((h, i) => `[Source ${i + 1}: ${h.title} (${h.href})]\n${h.snippet}`)
+            .join('\n\n')
+
+          const systemPrompt = `You are EvolvexAI, an expert autonomous reliability engineering assistant for Evolvex.
+Answer the user's question accurately and helpfully based on the following verified documentation sources. Use formatting, code blocks, and bullet points where appropriate. Cite sources when referencing specific features.
+If the answer cannot be found in the documentation, explain what is available in Evolvex and refer the user to the closest guide.
+
+Relevant Documentation:
+${docsContext}`
+
+          const res = await fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${openaiKey.trim()}`,
+            },
+            body: JSON.stringify({
+              model: 'gpt-4o-mini',
+              messages: [
+                { role: 'system', content: systemPrompt },
+                ...messages.map((m: { role: string; content: string }) => ({
+                  role: m.role as 'user' | 'assistant',
+                  content: m.content,
+                })),
+              ],
+              stream: true,
+            }),
+          })
+
+          if (res.ok && res.body) {
+            const reader = res.body.getReader()
+            const decoder = new TextDecoder()
+            const encoder = new TextEncoder()
+
+            const readable = new ReadableStream({
+              async start(controller) {
+                let buffer = ''
+                try {
+                  while (true) {
+                    const { done, value } = await reader.read()
+                    if (done) break
+                    buffer += decoder.decode(value, { stream: true })
+                    const lines = buffer.split('\n')
+                    buffer = lines.pop() || ''
+
+                    for (const line of lines) {
+                      const trimmed = line.trim()
+                      if (trimmed.startsWith('data: ') && trimmed !== 'data: [DONE]') {
+                        try {
+                          const json = JSON.parse(trimmed.slice(6))
+                          const text = json.choices?.[0]?.delta?.content
+                          if (text) {
+                            controller.enqueue(encoder.encode(text))
+                          }
+                        } catch {
+                          // ignore malformed SSE chunks
+                        }
+                      }
+                    }
+                  }
+                } catch (err) {
+                  console.warn('[EvolvexAI] OpenAI stream error:', err)
+                } finally {
+                  controller.close()
+                }
+              },
+            })
+
+            return new Response(readable, {
+              headers: {
+                'Content-Type': 'text/plain; charset=utf-8',
+                'Cache-Control': 'no-cache',
+                ...(sourcesHeader ? { [AI_ANSWER_SOURCES_HEADER]: sourcesHeader } : {}),
+              },
+            })
+          }
+        } catch (openaiErr) {
+          console.warn('[EvolvexAI] Falling back from OpenAI:', openaiErr)
+        }
+      }
+
+      // 3. Check for Anthropic API key if provided
       const anthropicKey = process.env.ANTHROPIC_API_KEY || process.env.THALLY_TRIAL_ANTHROPIC_KEY
       if (anthropicKey) {
         try {
