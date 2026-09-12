@@ -42,15 +42,21 @@ body.evolvex-landing-active #main-content > div {
 }
 
 /* Completely eliminate outer Thally footer and any trailing chrome on landing page */
+html:has(.thread-page) #main-content + footer,
+html:has(.thread-page) #main-content ~ footer,
+html:has(.thread-page) .thally-docs-main + footer,
 html:has(.thread-page) .thally-docs-shell > div > footer,
-html:has(.thread-page) .thally-docs-shell footer,
-html:has(.thread-page) footer:not(.thread-page footer),
+html:has(.thread-page) .thally-docs-shell > div > footer *,
+body:has(.thread-page) #main-content + footer,
+body:has(.thread-page) #main-content ~ footer,
+body:has(.thread-page) .thally-docs-main + footer,
 body:has(.thread-page) .thally-docs-shell > div > footer,
-body:has(.thread-page) .thally-docs-shell footer,
-body:has(.thread-page) footer:not(.thread-page footer),
+body:has(.thread-page) .thally-docs-shell > div > footer *,
+body.evolvex-landing-active #main-content + footer,
+body.evolvex-landing-active #main-content ~ footer,
+body.evolvex-landing-active .thally-docs-main + footer,
 body.evolvex-landing-active .thally-docs-shell > div > footer,
-body.evolvex-landing-active .thally-docs-shell footer,
-body.evolvex-landing-active footer:not(.thread-page footer) {
+body.evolvex-landing-active .thally-docs-shell > div > footer * {
   display: none !important;
   height: 0 !important;
   min-height: 0 !important;
