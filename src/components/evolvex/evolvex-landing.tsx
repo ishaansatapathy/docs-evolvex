@@ -207,10 +207,14 @@ export function EvolvexLanding() {
 
   useEffect(() => {
     setMounted(true)
+    document.body.classList.add('evolvex-landing-active')
     const timer = setTimeout(() => {
       setShowCross(true)
     }, 1400)
-    return () => clearTimeout(timer)
+    return () => {
+      clearTimeout(timer)
+      document.body.classList.remove('evolvex-landing-active')
+    }
   }, [])
 
   useEffect(() => {
@@ -284,6 +288,51 @@ export function EvolvexLanding() {
         '--thread-mono': 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
       } as React.CSSProperties}
     >
+      {/* Instant CSS reset for Thally Docs wrapper chrome when landing page renders */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        html:has(.thread-page) .thally-docs-topbar,
+        html:has(.thread-page) .thally-docs-sidebar,
+        html:has(.thread-page) .thally-ink-banner,
+        body:has(.thread-page) .thally-docs-topbar,
+        body:has(.thread-page) .thally-docs-sidebar,
+        body:has(.thread-page) .thally-ink-banner,
+        body.evolvex-landing-active .thally-docs-topbar,
+        body.evolvex-landing-active .thally-docs-sidebar,
+        body.evolvex-landing-active .thally-ink-banner {
+          display: none !important;
+        }
+
+        html:has(.thread-page) .thally-docs-shell,
+        body:has(.thread-page) .thally-docs-shell,
+        body.evolvex-landing-active .thally-docs-shell {
+          max-width: 100% !important;
+          width: 100% !important;
+          padding: 0 !important;
+          margin: 0 !important;
+          display: block !important;
+        }
+
+        html:has(.thread-page) .thally-docs-main,
+        html:has(.thread-page) #main-content,
+        body:has(.thread-page) .thally-docs-main,
+        body:has(.thread-page) #main-content,
+        body.evolvex-landing-active .thally-docs-main,
+        body.evolvex-landing-active #main-content {
+          padding: 0 !important;
+          margin: 0 !important;
+          width: 100% !important;
+          max-width: 100% !important;
+        }
+
+        html:has(.thread-page) #main-content > div,
+        body:has(.thread-page) #main-content > div,
+        body.evolvex-landing-active #main-content > div {
+          padding: 0 !important;
+          margin: 0 !important;
+          max-width: 100% !important;
+        }
+      `}} />
+
       {/* Background Image with Radial Vignette */}
       <div className="fixed inset-0 h-screen w-screen overflow-hidden pointer-events-none z-0">
         <img
